@@ -84,7 +84,9 @@ inspect eval longhaul/longhaul --model anthropic/claude-opus-5-5 --log-dir logs 
 python -m longhaul.report logs --out docs/results/live.md
 ```
 
-Strategies: `none`, `trim`, `edit`, `summary`, `native`, `auto`. **Cost before you run:** the offline table is a floor for input cost per shift; multiply by seeds and strategies, and add output and thinking tokens. A first pilot of 3 seeds at 60 turns is a small fraction of the full sweep.
+Strategies: `none`, `trim`, `edit`, `summary`, `native`, `auto`.
+
+**Price a sweep before running it:** `python -m longhaul.plan --turns 60 --seeds 3` prices the prompts the sweep would send. For that pilot (4 strategies, 3 shifts, 60 turns) the input-side floor is about $7.01 on Opus 5.5, $3.50 on Sonnet 5.5 and $0.27 on Haiku 5.5. Real runs cost more: output and thinking tokens are extra, and Claude's tokenizer tends to count more than the estimate. With 48 probes per strategy, that pilot only resolves differences larger than about 14 percentage points.
 
 ## Why the numbers can be trusted
 
