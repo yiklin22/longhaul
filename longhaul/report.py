@@ -27,7 +27,7 @@ def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
 
 def arm_stats(log, gap_s: float | None, chars_per_token: float = 2.4, escalate: bool = True) -> dict:
     """Pooled outcomes and per-shift cost for one log (one strategy). Recomputed from raw rows."""
-    rows, modelled, uncached, measured = [], [], [], []
+    rows, modelled, uncached, measured, dropped = [], [], [], [], 0
     for s in log.samples or []:
         score = (s.scores or {}).get("shift_scorer")
         if score is None:                      # errored sample: not a model failure, so not scored
@@ -35,6 +35,7 @@ def arm_stats(log, gap_s: float | None, chars_per_token: float = 2.4, escalate: 
         rows += score.metadata["rows"]
         # Inspect stores long message content once and references it; the cost model needs the real text.
         calls = sample_calls(resolve_sample_attachments(s, "full"), chars_per_token, gap_s, escalate=escalate)
+        dropped += calls["thinking_dropped"]
         modelled.append(summarise(calls["modelled"]))
         uncached.append(summarise(calls["uncached"]))
         if calls["measured"]:
@@ -66,6 +67,7 @@ def arm_stats(log, gap_s: float | None, chars_per_token: float = 2.4, escalate: 
         "cache_read_share": mean(modelled, lambda m: m["cache_read_share"]),
         "cost": {c: mean(modelled, lambda m: m["cost"][c]) for c in CARDS},
         "cost_uncached": {c: mean(uncached, lambda m: m["cost"][c]) for c in CARDS},
+        "thinking_dropped": dropped,
         "measured": ({"cache_read_share": mean(measured, lambda m: m["cache_read_share"]),
                       "cost": {c: mean(measured, lambda m: m["cost"][c]) for c in CARDS}} if measured else None),
     }
@@ -119,10 +121,10 @@ def render(arms: list[dict], accuracy_label: str, cost_models=("claude-opus-5-5"
              "### By distance to the evidence\n\n" + distance_table(arms)]
     measured = [a for a in arms if a["measured"]]
     if measured:
-        m = ["| strategy | modelled cache-read share | measured | modelled $ (opus-5-5) | measured $ |", "|---|---|---|---|---|"]
+        m = ["| strategy | modelled cache-read share | measured | modelled $ (opus-5-5) | measured $ | thinking blocks dropped |", "|---|---|---|---|---|---|"]
         for a in measured:
             m.append(f"| {a['label']} | {100 * a['cache_read_share']:.0f}% | {100 * a['measured']['cache_read_share']:.0f}% | "
-                     f"{a['cost']['claude-opus-5-5']:.3f} | {a['measured']['cost']['claude-opus-5-5']:.3f} |")
+                     f"{a['cost']['claude-opus-5-5']:.3f} | {a['measured']['cost']['claude-opus-5-5']:.3f} | {a['thinking_dropped']} |")
         parts.append("### Cache model against the provider's own numbers\n\n" + "\n".join(m))
     return "\n\n".join(parts) + "\n"
 

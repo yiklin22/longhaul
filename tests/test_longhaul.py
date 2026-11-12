@@ -5,7 +5,9 @@ import unittest
 from inspect_ai import eval as inspect_eval
 from inspect_ai.model import get_model
 
-from longhaul.cost import CARDS, Call, PrefixCache, price
+from types import SimpleNamespace
+
+from longhaul.cost import CARDS, Call, PrefixCache, dropped_thinking, price
 from longhaul.gate import compare
 from longhaul.oracle import make_mock
 from longhaul.report import arm_stats, wilson
@@ -141,6 +143,14 @@ class CacheTests(unittest.TestCase):
         haiku = CARDS["claude-haiku-5-5"]
         self.assertAlmostEqual(price(Call(100_000, 0, 0, 0), haiku), 0.010)
         self.assertAlmostEqual(price(Call(200_000, 0, 0, 0), haiku), 0.100)          # 5x card above 100K
+
+    def test_dropped_thinking_blocks_are_counted_from_output_metadata(self):
+        out = SimpleNamespace(metadata={"extra_body": {"input_transformations": [
+            {"type": "thinking_dropped", "path": "messages.1.content.0", "reason": "prefix_binding_mismatch"},
+            {"type": "thinking_mismatch_allowed", "reason": "prefix_binding_mismatch"},
+            {"type": "thinking_dropped", "reason": "model_binding_mismatch"}]}})
+        self.assertEqual(dropped_thinking(out), 2)
+        self.assertEqual(dropped_thinking(SimpleNamespace(metadata=None)), 0)
 
     def test_wilson_interval_contains_the_estimate(self):
         lo, hi = wilson(8, 10)

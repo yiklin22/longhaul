@@ -10,7 +10,7 @@ It is built on [Inspect AI](https://github.com/UKGovernmentBEIS/inspect_ai), the
 
 | Piece | State |
 |---|---|
-| Workload, grading, Inspect task, cost model, report | Built, 28 tests passing offline |
+| Workload, grading, Inspect task, cost model, report | Built, 29 tests passing offline |
 | Offline results (below) | Real and reproducible: `python -m longhaul.sim` |
 | Live model results | **Not run yet.** No API key was available. Commands are below; nothing in this README is a live-model number |
 
@@ -69,7 +69,7 @@ The cost model ([longhaul/cost.py](longhaul/cost.py)) replays the exact messages
 
 ```bash
 uv venv && uv pip install -e .
-python -m unittest discover -s tests -t .       # 28 tests, no API key
+python -m unittest discover -s tests -t .       # 29 tests, no API key
 python -m longhaul.sim                          # the offline table above, about a minute
 python -m longhaul.sweep                        # pause and threshold sweeps, about three minutes
 python -m longhaul.gate                         # regression gate against baselines/offline.json
@@ -99,7 +99,7 @@ Strategies: `none`, `trim`, `edit`, `summary`, `native`, `auto`. **Cost before y
 - No live-model result exists yet. How well a real model reads a 76K-token prompt, and how much a real summariser keeps, are the open questions this was built to answer.
 - The cache model's breakpoints and lifetime follow Inspect's Anthropic provider as read from its source (v0.3.289). It has not been checked against live usage numbers.
 - The workload is synthetic and fact-shaped. It does not test counting, inventory ("what have we worked on") or temporal ordering.
-- Current Claude models bind thinking blocks to the conversation that produced them, so client-side history edits (trim, edit, summary) may be rejected or lose reasoning. Whether Inspect's strategies handle this on Claude 5.x models is untested here.
+- Current Claude models bind thinking blocks to the conversation that produced them. Inspect's Anthropic provider (v0.3.289) asks the API to drop a block whose history was edited instead of rejecting the request, and logs each drop. So trim, edit and summary should run on Claude 5.x through the first-party API, but lose reasoning each time they edit. The report counts those drops per strategy on a live run; none has been measured yet.
 
 ## Related work
 

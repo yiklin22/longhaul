@@ -106,6 +106,18 @@ def blocks_from_event(event, chars_per_token: float = 2.4) -> list[tuple[str, in
     return out
 
 
+def dropped_thinking(output) -> int:
+    """Thinking blocks the API dropped from this request because the history before them was edited.
+
+    Current Claude models bind each thinking block to the conversation that produced it. Inspect asks
+    the API to drop a block whose history changed (instead of rejecting the request) and records each
+    drop in the output metadata. Every drop is reasoning the model no longer has.
+    """
+    extra = ((getattr(output, "metadata", None) or {}).get("extra_body") or {})
+    return sum(1 for t in extra.get("input_transformations") or []
+               if isinstance(t, dict) and t.get("type") == "thinking_dropped")
+
+
 class PrefixCache:
     """Simulated prompt cache for one conversation."""
 
@@ -149,7 +161,7 @@ def sample_calls(sample, chars_per_token: float = 2.4, gap_s: float | None = 10.
     escalate: switch to the 1-hour lifetime after a gap has outlived 5 minutes, as Inspect does.
     """
     cache = PrefixCache(min_tokens=min_tokens)
-    modelled, uncached, measured = [], [], []
+    modelled, uncached, measured, dropped = [], [], [], 0
     clock, last_cached, long_lived, first = 0.0, None, False, True
     for event in sample.events:
         if event.event != "model" or event.output is None or event.error:
@@ -171,11 +183,12 @@ def sample_calls(sample, chars_per_token: float = 2.4, gap_s: float | None = 10.
             last_cached = now
         modelled.append(call)
         uncached.append(Call(sum(t for _, t in blocks), 0, 0, out_tokens))
+        dropped += dropped_thinking(event.output)
         usage = event.output.usage
         if usage and (usage.input_tokens_cache_read is not None or usage.input_tokens_cache_write is not None):
             measured.append(Call(usage.input_tokens, usage.input_tokens_cache_write or 0,
                                  usage.input_tokens_cache_read or 0, usage.output_tokens))
-    return {"modelled": modelled, "uncached": uncached, "measured": measured}
+    return {"modelled": modelled, "uncached": uncached, "measured": measured, "thinking_dropped": dropped}
 
 
 def summarise(calls: list[Call]) -> dict:
