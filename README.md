@@ -36,7 +36,6 @@ What the offline numbers already show:
 3. **Trimming forgets by distance.** Survival is 98% or better for evidence up to 30 turns back and 13% beyond 60 turns.
 4. **Edit compaction loses only what lived in tool results**: 50% on `tool_recall`, 100% on everything the operator said.
 5. **Trimming makes an agent wrong, not just forgetful.** On "how many" questions it was right 5% of the time, and the 38 failures were confident undercounts, not `UNKNOWN`: the agent cannot tell that part of the list is gone. Inspect's trim also pins the first user message, so in one probe the original value survived there while its later correction was trimmed.
-
 6. **A memory tool is not free.** Giving the agent Inspect's `memory()` tool, with the save-your-notes warning before each compaction, raises trim's cost from $1.35 to $1.82, about the price of sending full history ($1.84). Whether the notes recover what trimming drops is a live question; the mock note-taker saves everything, so its score is not a finding.
 
 ### Pauses between turns change the answer
@@ -96,7 +95,7 @@ python -m longhaul.report logs --out docs/results/live.md
 
 Strategies: `none`, `trim`, `edit`, `summary`, `native`, `auto`. Add `-T memory=true` to give the agent the memory tool.
 
-**Price a sweep before running it:** `python -m longhaul.plan --turns 60 --seeds 3` prices the prompts the sweep would send. For that pilot (4 strategies, 3 shifts, 60 turns) the input-side floor is about $7.01 on Opus 5.5, $3.50 on Sonnet 5.5 and $0.27 on Haiku 5.5. Real runs cost more: output and thinking tokens are extra, and Claude's tokenizer tends to count more than the estimate. With 48 probes per strategy, that pilot only resolves differences larger than about 14 percentage points.
+**Price a sweep before running it:** `python -m longhaul.plan --turns 60 --seeds 3` prices the prompts the sweep would send. For that pilot (6 strategies, 3 shifts, 60 turns) the input-side floor is about $11.17 on Opus 5.5, $5.58 on Sonnet 5.5 and $0.43 on Haiku 5.5. Real runs cost more: output and thinking tokens are extra, and Claude's tokenizer tends to count more than the estimate. With 48 probes per strategy, that pilot only resolves differences larger than about 14 percentage points.
 
 ### LongMemEval, replayed
 
@@ -121,7 +120,7 @@ The chat history is replayed as real conversation turns, session by session, wit
 
 ## Limits
 
-- No live-model result exists yet, on the synthetic shift or on LongMemEval. How well a real model reads a 76K-token prompt, and how much a real summariser keeps, are the open questions this was built to answer.
+- No live-model result exists yet, on the synthetic shift or on LongMemEval. How well a real model reads a 72K-token prompt, and how much a real summariser keeps, are the open questions this was built to answer.
 - The cache model's breakpoints and lifetime follow Inspect's Anthropic provider as read from its source (v0.3.289). It has not been checked against live usage numbers.
 - The workload is synthetic and fact-shaped. It tests counting, but not inventory ("what have we worked on") or temporal ordering.
 - Current Claude models bind thinking blocks to the conversation that produced them. Inspect's Anthropic provider (v0.3.289) asks the API to drop a block whose history was edited instead of rejecting the request, and logs each drop. So trim, edit and summary should run on Claude 5.x through the first-party API, but lose reasoning each time they edit. The report counts those drops per strategy on a live run; none has been measured yet.
@@ -129,7 +128,7 @@ The chat history is replayed as real conversation turns, session by session, wit
 ## Related work
 
 - [nchapman/context-eval](https://github.com/nchapman/context-eval) compares compaction designs for coding agents and reports that inventory, supersession and counting are where they separate.
-- [LongMemEval](https://github.com/xiaowu0162/LongMemEval) and [MemoryAgentBench](https://github.com/HUST-AI-HYZ/MemoryAgentBench) are the established long-term-memory benchmarks; neither is in [inspect_evals](https://github.com/UKGovernmentBEIS/inspect_evals) yet.
+- [LongMemEval](https://github.com/xiaowu0162/LongMemEval) and [MemoryAgentBench](https://github.com/HUST-AI-HYZ/MemoryAgentBench) are the established long-term-memory benchmarks; neither appeared in the [inspect_evals](https://github.com/UKGovernmentBEIS/inspect_evals) listing when checked on 2026-11-11.
 - [t46/compactionbench](https://github.com/t46/compactionbench) and [chowdarymcs/agent-context-cost-benchmark](https://github.com/chowdarymcs/agent-context-cost-benchmark) study compaction and cost on local or mock models.
 
 What is different here: the strategies are Inspect's shipped implementations, and cost is priced with cache reads and writes instead of a flat input rate.
