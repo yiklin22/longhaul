@@ -10,7 +10,7 @@ It is built on [Inspect AI](https://github.com/UKGovernmentBEIS/inspect_ai), the
 
 | Piece | State |
 |---|---|
-| Workload, grading, Inspect task, cost model, report | Built, 26 tests passing offline |
+| Workload, grading, Inspect task, cost model, report | Built, 28 tests passing offline |
 | Offline results (below) | Real and reproducible: `python -m longhaul.sim` |
 | Live model results | **Not run yet.** No API key was available. Commands are below; nothing in this README is a live-model number |
 
@@ -69,9 +69,10 @@ The cost model ([longhaul/cost.py](longhaul/cost.py)) replays the exact messages
 
 ```bash
 uv venv && uv pip install -e .
-python -m unittest discover -s tests -t .       # 26 tests, no API key
+python -m unittest discover -s tests -t .       # 28 tests, no API key
 python -m longhaul.sim                          # the offline table above, about a minute
 python -m longhaul.sweep                        # pause and threshold sweeps, about three minutes
+python -m longhaul.gate                         # regression gate against baselines/offline.json
 ```
 
 Live, one strategy per run (needs `ANTHROPIC_API_KEY` and `uv pip install -e ".[live]"`):
@@ -91,6 +92,7 @@ Strategies: `none`, `trim`, `edit`, `summary`, `native`, `auto`. **Cost before y
 - **Deterministic grading** on a final `ANSWER:` line, or on the tool's received arguments. Listing two candidate values does not pass.
 - **Both directions are covered.** Always answering fails `abstain`; always saying `UNKNOWN` fails the rest.
 - **Intervals on every rate**, and every headline is recomputed from per-probe rows in the log.
+- **A regression gate runs in CI.** The offline run is deterministic, so if a code change or a new Inspect release makes a strategy keep less evidence or cost more than the committed baseline, the build fails.
 
 ## Limits
 
@@ -113,7 +115,7 @@ What is different here: the strategies are Inspect's shipped implementations, an
 2. Memory-tool arms (`memory=True`) and native compaction.
 3. A LongMemEval adapter for external validity, offered upstream to `inspect_evals`.
 4. Inventory, counting and temporal probes.
-5. An eval gate: fail CI when a strategy's accuracy or cost moves past a threshold.
+5. Extend the regression gate to live runs, with tolerances set from run-to-run variance.
 
 ## Using it on a customer deployment
 

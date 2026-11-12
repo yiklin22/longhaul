@@ -1,0 +1,33 @@
+{
+  "config": {
+    "turns": 60,
+    "seeds": 3,
+    "threshold": 12000,
+    "noise_chars": 2400,
+    "per_category": 2,
+    "gap": 10.0
+  },
+  "model": "claude-opus-5-5",
+  "arms": {
+    "none (full history)": {
+      "survival": 1.0,
+      "cost": 0.6112,
+      "control": 1.0
+    },
+    "trim, keep 50%": {
+      "survival": 0.4524,
+      "cost": 0.5106,
+      "control": 1.0
+    },
+    "edit, keep 3 tool results": {
+      "survival": 0.9286,
+      "cost": 0.4792,
+      "control": 1.0
+    },
+    "summary": {
+      "survival": 1.0,
+      "cost": 0.6191,
+      "control": 1.0
+    }
+  }
+}

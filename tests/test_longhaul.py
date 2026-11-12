@@ -6,6 +6,7 @@ from inspect_ai import eval as inspect_eval
 from inspect_ai.model import get_model
 
 from longhaul.cost import CARDS, Call, PrefixCache, price
+from longhaul.gate import compare
 from longhaul.oracle import make_mock
 from longhaul.report import arm_stats, wilson
 from longhaul.scenario import CATEGORIES, UNKNOWN, Config, Expect, generate, grade, parse_answer
@@ -184,6 +185,19 @@ class HarnessTests(unittest.TestCase):
         arm = run("none", "oracle")
         self.assertLess(arm["cost"]["claude-opus-5-5"] * 3, arm["cost_uncached"]["claude-opus-5-5"])
         self.assertGreater(arm["cache_read_share"], 0.8)
+
+
+class GateTests(unittest.TestCase):
+    base = {"edit": {"survival": 0.90, "cost": 1.00, "control": 1.0}}
+
+    def test_gate_passes_within_tolerance_and_on_improvement(self):
+        self.assertEqual(compare(self.base, {"edit": {"survival": 0.89, "cost": 1.04, "control": 1.0}}, 0.02, 0.05), [])
+        self.assertEqual(compare(self.base, {"edit": {"survival": 0.99, "cost": 0.50, "control": 1.0}}, 0.02, 0.05), [])
+
+    def test_gate_fails_on_lost_evidence_higher_cost_or_missing_arm(self):
+        self.assertEqual(len(compare(self.base, {"edit": {"survival": 0.80, "cost": 1.00, "control": 1.0}}, 0.02, 0.05)), 1)
+        self.assertEqual(len(compare(self.base, {"edit": {"survival": 0.90, "cost": 1.20, "control": 0.9}}, 0.02, 0.05)), 2)
+        self.assertEqual(len(compare(self.base, {}, 0.02, 0.05)), 1)
 
 
 if __name__ == "__main__":

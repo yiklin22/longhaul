@@ -15,5 +15,5 @@ jobs:
       - run: pip install -e .
       - name: Unit tests and offline harness checks (no API key)
         run: python -m unittest discover -s tests -t .
-      - name: Offline results still reproduce
-        run: python -m longhaul.sim --seeds 2 --turns 60 --per-category 2
+      - name: Regression gate (evidence survival and cost against the committed baseline)
+        run: python -m longhaul.gate
