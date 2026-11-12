@@ -25,7 +25,7 @@ def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
     return (max(0.0, centre - half), min(1.0, centre + half))
 
 
-def arm_stats(log, gap_s: float | None, chars_per_token: float = 2.4) -> dict:
+def arm_stats(log, gap_s: float | None, chars_per_token: float = 2.4, escalate: bool = True) -> dict:
     """Pooled outcomes and per-shift cost for one log (one strategy). Recomputed from raw rows."""
     rows, modelled, uncached, measured = [], [], [], []
     for s in log.samples or []:
@@ -34,7 +34,7 @@ def arm_stats(log, gap_s: float | None, chars_per_token: float = 2.4) -> dict:
             continue
         rows += score.metadata["rows"]
         # Inspect stores long message content once and references it; the cost model needs the real text.
-        calls = sample_calls(resolve_sample_attachments(s, "full"), chars_per_token, gap_s)
+        calls = sample_calls(resolve_sample_attachments(s, "full"), chars_per_token, gap_s, escalate=escalate)
         modelled.append(summarise(calls["modelled"]))
         uncached.append(summarise(calls["uncached"]))
         if calls["measured"]:

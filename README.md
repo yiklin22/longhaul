@@ -10,7 +10,7 @@ It is built on [Inspect AI](https://github.com/UKGovernmentBEIS/inspect_ai), the
 
 | Piece | State |
 |---|---|
-| Workload, grading, Inspect task, cost model, report | Built, 24 tests passing offline |
+| Workload, grading, Inspect task, cost model, report | Built, 26 tests passing offline |
 | Offline results (below) | Real and reproducible: `python -m longhaul.sim` |
 | Live model results | **Not run yet.** No API key was available. Commands are below; nothing in this README is a live-model number |
 
@@ -35,6 +35,20 @@ What the offline numbers already show:
 4. **Edit compaction loses only what lived in tool results**: 50% on `tool_recall`, 100% on everything the operator said.
 5. **Trimming can make an agent wrong, not just forgetful.** Inspect's trim pins the first user message. In one probe of 280 the original value survived there while the later correction was trimmed, so the retired value was the only one left to read.
 
+### Pauses between turns change the answer
+
+Same runs, re-priced as the operator's pause between turns grows ($ per shift, Opus 5.5). Full table: [docs/results/sweeps.md](docs/results/sweeps.md).
+
+| pause between turns | full history | edit | summary | full history, 5-minute cache only | no cache |
+|---|---|---|---|---|---|
+| up to 280 s | 1.93 | 1.20 | 1.40 | 1.93 | 29.95 |
+| 400 s to 40 min | 2.17 | 1.48 | 1.83 to 1.85 | 24.67 | 29.95 |
+| 67 min | 39.10 | 18.64 | 15.99 | 24.67 | 29.95 |
+
+6. **A pause just over five minutes costs 13 times more on a plain 5-minute cache** ($1.93 to $24.67), because every turn rewrites the whole prompt. Inspect's switch to one-hour entries holds it to $2.17.
+7. **Past an hour, caching full history costs more than not caching at all** ($39.10 against $29.95): every turn pays the one-hour write price, twice the input rate, and never reads it back. This is where summarising becomes the cheapest option.
+8. **A lower compaction threshold buys little for edit and costs trim a lot.** From 60,000 to 15,000 tokens, edit drops from 96% to 87% survival and trim from 78% to 32%.
+
 ## How it works
 
 One sample is one long support shift. The operator states account facts, changes some later, and asks for them many turns on, between routine ticket lookups that supply the token load. Everything is synthetic and seeded.
@@ -55,8 +69,9 @@ The cost model ([longhaul/cost.py](longhaul/cost.py)) replays the exact messages
 
 ```bash
 uv venv && uv pip install -e .
-python -m unittest discover -s tests -t .       # 24 tests, no API key
+python -m unittest discover -s tests -t .       # 26 tests, no API key
 python -m longhaul.sim                          # the offline table above, about a minute
+python -m longhaul.sweep                        # pause and threshold sweeps, about three minutes
 ```
 
 Live, one strategy per run (needs `ANTHROPIC_API_KEY` and `uv pip install -e ".[live]"`):
@@ -80,7 +95,7 @@ Strategies: `none`, `trim`, `edit`, `summary`, `native`, `auto`. **Cost before y
 ## Limits
 
 - No live-model result exists yet. How well a real model reads a 76K-token prompt, and how much a real summariser keeps, are the open questions this was built to answer.
-- The cache model's breakpoint placement is an assumption until checked against live usage numbers.
+- The cache model's breakpoints and lifetime follow Inspect's Anthropic provider as read from its source (v0.3.289). It has not been checked against live usage numbers.
 - The workload is synthetic and fact-shaped. It does not test counting, inventory ("what have we worked on") or temporal ordering.
 - Current Claude models bind thinking blocks to the conversation that produced them, so client-side history edits (trim, edit, summary) may be rejected or lose reasoning. Whether Inspect's strategies handle this on Claude 5.x models is untested here.
 

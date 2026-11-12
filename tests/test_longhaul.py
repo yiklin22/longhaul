@@ -101,12 +101,25 @@ class CacheTests(unittest.TestCase):
         edited = cache.request([self.blocks[0], ("u1 edited", 300), ("a1", 300)], 10, now=10)
         self.assertEqual((edited.cache_read, edited.cache_write), (600, 600))
 
-    def test_entry_expires_after_ttl_and_a_read_refreshes_it(self):
-        cache = PrefixCache(ttl=300)
+    def test_entry_expires_after_its_lifetime_and_a_read_refreshes_it(self):
+        cache = PrefixCache()
         cache.request(self.blocks, 10, now=0)
         self.assertEqual(cache.request(self.blocks, 10, now=200).cache_read, 1200)   # refreshed at t=200
         self.assertEqual(cache.request(self.blocks, 10, now=450).cache_read, 1200)   # still alive
         self.assertEqual(cache.request(self.blocks, 10, now=800).cache_read, 0)      # expired
+
+    def test_one_hour_writes_are_billed_at_twice_input_and_live_longer(self):
+        cache = PrefixCache()
+        first = cache.request(self.blocks, 0, now=0, ttl=3600)
+        self.assertEqual((first.cache_write, first.cache_write_1h), (0, 1200))
+        self.assertAlmostEqual(price(first, CARDS["claude-opus-5-5"]), 1200 * 8.00 / 1e6)
+        self.assertEqual(cache.request(self.blocks, 0, now=3000, ttl=3600).cache_read, 1200)
+
+    def test_second_to_last_breakpoint_survives_a_changed_last_block(self):
+        cache = PrefixCache()
+        cache.request(self.blocks, 10, now=0)
+        swapped = cache.request(self.blocks[:2] + [("a1 different", 300)], 10, now=5)
+        self.assertEqual((swapped.cache_read, swapped.cache_write), (900, 300))
 
     def test_short_prefix_is_not_cached(self):
         cache = PrefixCache(min_tokens=512)
