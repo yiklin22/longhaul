@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 440" width="860" height="440" role="img" aria-label="Cost per shift against the pause between operator turns, for four context strategies">
+<rect width="860" height="440" fill="#1a1a19"/>
+<text x="56" y="28" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="600" fill="#f0efec">A pause longer than the cache lifetime changes which strategy is cheapest</text>
+<text x="56" y="48" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#c3c2b7">Modelled cost per 120-turn shift on Claude Opus 5.5 (USD, log scale) by pause between operator turns. Offline estimate.</text>
+<line x1="56" y1="68" x2="74" y2="68" stroke="#3987e5" stroke-width="2"/><circle cx="65" cy="68" r="4" fill="#3987e5"/><text x="80" y="72" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#c3c2b7">Full history</text>
+<line x1="170.8" y1="68" x2="188.8" y2="68" stroke="#d95926" stroke-width="2"/><circle cx="179.8" cy="68" r="4" fill="#d95926"/><text x="194.8" y="72" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#c3c2b7">Full history, 5-minute cache only</text>
+<line x1="420.0" y1="68" x2="438.0" y2="68" stroke="#199e70" stroke-width="2"/><circle cx="429.0" cy="68" r="4" fill="#199e70"/><text x="444.0" y="72" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#c3c2b7">Edit (clears old tool results)</text>
+<line x1="650.0" y1="68" x2="668.0" y2="68" stroke="#c98500" stroke-width="2"/><circle cx="659.0" cy="68" r="4" fill="#c98500"/><text x="674.0" y="72" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#c3c2b7">Summary</text>
+<line x1="750.8" y1="68" x2="768.8" y2="68" stroke="#898781" stroke-width="1.5" stroke-dasharray="4 3"/><text x="774.8" y="72" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#c3c2b7">No cache</text>
+<line x1="56" y1="388.0" x2="650" y2="388.0" stroke="#2c2c2a" stroke-width="1"/><text x="48" y="392.0" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#898781">$1</text>
+<line x1="56" y1="335.6" x2="650" y2="335.6" stroke="#2c2c2a" stroke-width="1"/><text x="48" y="339.6" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#898781">$2</text>
+<line x1="56" y1="266.2" x2="650" y2="266.2" stroke="#2c2c2a" stroke-width="1"/><text x="48" y="270.2" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#898781">$5</text>
+<line x1="56" y1="213.8" x2="650" y2="213.8" stroke="#2c2c2a" stroke-width="1"/><text x="48" y="217.8" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#898781">$10</text>
+<line x1="56" y1="161.3" x2="650" y2="161.3" stroke="#2c2c2a" stroke-width="1"/><text x="48" y="165.3" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#898781">$20</text>
+<line x1="56" y1="92.0" x2="650" y2="92.0" stroke="#2c2c2a" stroke-width="1"/><text x="48" y="96.0" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#898781">$50</text>
+<text x="56.0" y="408" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="#898781">10 s</text>
+<text x="155.0" y="408" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="#898781">2 min</text>
+<text x="254.0" y="408" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="#898781">4.7 min</text>
+<text x="353.0" y="408" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="#898781">6.7 min</text>
+<text x="452.0" y="408" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="#898781">15 min</text>
+<text x="551.0" y="408" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="#898781">40 min</text>
+<text x="650.0" y="408" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="#898781">67 min</text>
+<line x1="303.5" y1="92" x2="303.5" y2="388" stroke="#898781" stroke-width="1" stroke-dasharray="2 4"/><text x="297.5" y="104" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#c3c2b7">5-minute cache lifetime</text>
+<line x1="600.5" y1="92" x2="600.5" y2="388" stroke="#898781" stroke-width="1" stroke-dasharray="2 4"/><text x="594.5" y="104" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#c3c2b7">1 hour</text>
+<line x1="56" y1="134.4" x2="650" y2="134.4" stroke="#898781" stroke-width="1.5" stroke-dasharray="4 3"/>
+<polyline points="56.0,341.9 155.0,341.9 254.0,341.9 353.0,333.3 452.0,333.3 551.0,333.3 650.0,111.6" fill="none" stroke="#3987e5" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="56.0" cy="341.9" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="155.0" cy="341.9" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="254.0" cy="341.9" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="353.0" cy="333.3" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="452.0" cy="333.3" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="551.0" cy="333.3" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="650.0" cy="111.6" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<polyline points="56.0,341.9 155.0,341.9 254.0,341.9 353.0,146.5 452.0,146.5 551.0,146.5 650.0,146.5" fill="none" stroke="#d95926" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="56.0" cy="341.9" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="155.0" cy="341.9" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="254.0" cy="341.9" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="353.0" cy="146.5" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="452.0" cy="146.5" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="551.0" cy="146.5" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="650.0" cy="146.5" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<polyline points="56.0,378.1 155.0,378.1 254.0,378.1 353.0,362.0 452.0,362.0 551.0,362.0 650.0,168.6" fill="none" stroke="#199e70" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="56.0" cy="378.1" r="4" fill="#199e70" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="155.0" cy="378.1" r="4" fill="#199e70" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="254.0" cy="378.1" r="4" fill="#199e70" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="353.0" cy="362.0" r="4" fill="#199e70" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="452.0" cy="362.0" r="4" fill="#199e70" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="551.0" cy="362.0" r="4" fill="#199e70" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="650.0" cy="168.6" r="4" fill="#199e70" stroke="#1a1a19" stroke-width="2"/>
+<polyline points="56.0,365.9 155.0,365.9 254.0,365.3 353.0,344.8 452.0,344.8 551.0,343.9 650.0,180.5" fill="none" stroke="#c98500" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="56.0" cy="365.9" r="4" fill="#c98500" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="155.0" cy="365.9" r="4" fill="#c98500" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="254.0" cy="365.3" r="4" fill="#c98500" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="353.0" cy="344.8" r="4" fill="#c98500" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="452.0" cy="344.8" r="4" fill="#c98500" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="551.0" cy="343.9" r="4" fill="#c98500" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="650.0" cy="180.5" r="4" fill="#c98500" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="664" cy="111.6" r="4" fill="#3987e5"/>
+<text x="674" y="115.6" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#f0efec">Full history $38.60</text>
+<text x="674" y="138.4" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#f0efec">No cache $28.56</text>
+<circle cx="664" cy="149.4" r="4" fill="#d95926"/>
+<text x="674" y="153.4" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#f0efec">5-minute cache only $24.33</text>
+<circle cx="664" cy="168.6" r="4" fill="#199e70"/>
+<text x="674" y="172.6" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#f0efec">Edit $18.17</text>
+<circle cx="664" cy="183.6" r="4" fill="#c98500"/>
+<text x="674" y="187.6" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#f0efec">Summary $15.53</text>
+<text x="64" y="331.9" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#f0efec">$1.84 with caching</text>
+</svg>

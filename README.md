@@ -39,6 +39,11 @@ What the offline numbers already show:
 
 Same runs, re-priced as the operator's pause between turns grows ($ per shift, Opus 5.5). Full table: [docs/results/sweeps.md](docs/results/sweeps.md).
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/pause-cost-dark.svg">
+  <img alt="Line chart of modelled cost per shift against the pause between operator turns. Full history costs $1.84 up to a 4.7-minute pause, $2.06 up to 40 minutes, and $38.60 at 67 minutes, above the $28.56 no-cache cost. With only a 5-minute cache it jumps to $24.33 once pauses pass five minutes." src="docs/img/pause-cost-light.svg">
+</picture>
+
 | pause between turns | full history | edit | summary | full history, 5-minute cache only | no cache |
 |---|---|---|---|---|---|
 | up to 280 s | 1.84 | 1.14 | 1.34 to 1.35 | 1.84 | 28.56 |
@@ -74,6 +79,7 @@ python -m unittest discover -s tests -t .       # 31 tests, no API key
 python -m longhaul.sim                          # the offline table above, about a minute
 python -m longhaul.sweep                        # pause and threshold sweeps, about three minutes
 python -m longhaul.gate                         # regression gate against baselines/offline.json
+python -m longhaul.chart                        # redraw the chart from the sweep table
 ```
 
 Live, one strategy per run (needs `ANTHROPIC_API_KEY` and `uv pip install -e ".[live]"`):
