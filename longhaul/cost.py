@@ -200,3 +200,36 @@ def summarise(calls: list[Call]) -> dict:
         "cache_read_share": (sum(c.cache_read for c in calls) / prompt) if prompt else 0.0,
         "cost": {name: sum(price(c, card) for c in calls) for name, card in CARDS.items()},
     }
+
+
+def main() -> None:
+    """Price any Inspect agent logs: `python -m longhaul.cost <log_dir> [--gap SECONDS]`."""
+    import argparse
+
+    from inspect_ai.log import list_eval_logs, read_eval_log, resolve_sample_attachments
+
+    ap = argparse.ArgumentParser(description="Cache-aware cost of the model calls in Inspect logs (any task).")
+    ap.add_argument("log_dir")
+    ap.add_argument("--gap", type=float, default=None,
+                    help="assumed seconds between turns for the cache model (default: the log's own timestamps)")
+    ap.add_argument("--model", default="claude-opus-5-5", choices=sorted(CARDS))
+    args = ap.parse_args()
+    print(f"| task | samples | calls | peak prompt tokens | modelled cache-read share | modelled $ | uncached $ | measured $ | thinking dropped |")
+    print("|---|---|---|---|---|---|---|---|---|")
+    for info in list_eval_logs(args.log_dir):
+        log = read_eval_log(info)
+        modelled, uncached, measured, dropped = [], [], [], 0
+        for sample in log.samples or []:
+            calls = sample_calls(resolve_sample_attachments(sample, "full"), gap_s=args.gap)
+            modelled += calls["modelled"]
+            uncached += calls["uncached"]
+            measured += calls["measured"]
+            dropped += calls["thinking_dropped"]
+        m, u = summarise(modelled), summarise(uncached)
+        real = f"{summarise(measured)['cost'][args.model]:.3f}" if measured else "n/a"
+        print(f"| {log.eval.task} | {len(log.samples or [])} | {m['calls']} | {m['peak_prompt']:,} | "
+              f"{100 * m['cache_read_share']:.0f}% | {m['cost'][args.model]:.3f} | {u['cost'][args.model]:.3f} | {real} | {dropped} |")
+
+
+if __name__ == "__main__":
+    main()

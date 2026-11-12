@@ -10,7 +10,7 @@ It is built on [Inspect AI](https://github.com/UKGovernmentBEIS/inspect_ai), the
 
 | Piece | State |
 |---|---|
-| Workload, grading, Inspect task, cost model, report, regression gate | Built, 33 tests passing offline, CI green |
+| Workload, grading, Inspect task, cost model, report, regression gate | Built, 39 tests passing offline, CI green |
 | Offline results (below) | Real and reproducible: `python -m longhaul.sim` |
 | Live model results | **Not run yet.** No API key was available. Commands are below; nothing in this README is a live-model number |
 
@@ -79,7 +79,7 @@ The cost model ([longhaul/cost.py](longhaul/cost.py)) replays the exact messages
 
 ```bash
 uv venv && uv pip install -e .
-python -m unittest discover -s tests -t .       # 33 tests, no API key
+python -m unittest discover -s tests -t .       # 39 tests, no API key
 python -m longhaul.sim                          # the offline table above, about a minute
 python -m longhaul.sweep                        # pause and threshold sweeps, about three minutes
 python -m longhaul.gate                         # regression gate against baselines/offline.json
@@ -98,6 +98,18 @@ Strategies: `none`, `trim`, `edit`, `summary`, `native`, `auto`. Add `-T memory=
 
 **Price a sweep before running it:** `python -m longhaul.plan --turns 60 --seeds 3` prices the prompts the sweep would send. For that pilot (4 strategies, 3 shifts, 60 turns) the input-side floor is about $7.01 on Opus 5.5, $3.50 on Sonnet 5.5 and $0.27 on Haiku 5.5. Real runs cost more: output and thinking tokens are extra, and Claude's tokenizer tends to count more than the estimate. With 48 probes per strategy, that pilot only resolves differences larger than about 14 percentage points.
 
+### LongMemEval, replayed
+
+The synthetic shift gives exact grading. For results on a benchmark people already know, the same strategies run on [LongMemEval](https://github.com/xiaowu0162/LongMemEval) (get its data files from that repo; they are not bundled):
+
+```bash
+inspect eval longhaul/longmemeval --model anthropic/claude-opus-5-5 --model-role grader=<judge model> \
+  -T data=longmemeval_s.json -T strategy=edit -T threshold=60000 -T limit=50 --log-dir logs-lme
+python -m longhaul.cost logs-lme          # cache-aware cost of any Inspect logs
+```
+
+The chat history is replayed as real conversation turns, session by session, with the strategy running as it grows, and the question is asked in that conversation. The paper instead puts the whole history in one prompt, so these numbers are not comparable with its tables. Answers are graded with the paper's own judge prompts. The adapter is tested on a made-up file in the benchmark's format; it has not been run on the real data or a real model.
+
 ## Why the numbers can be trusted
 
 - **Known-good and known-bad models run through the whole pipeline in CI.** A perfect reader scores 100% on full history; a model that always says `UNKNOWN` passes only `abstain`; a model that believes injected notices fails exactly the `poison` probes.
@@ -109,7 +121,7 @@ Strategies: `none`, `trim`, `edit`, `summary`, `native`, `auto`. Add `-T memory=
 
 ## Limits
 
-- No live-model result exists yet. How well a real model reads a 76K-token prompt, and how much a real summariser keeps, are the open questions this was built to answer.
+- No live-model result exists yet, on the synthetic shift or on LongMemEval. How well a real model reads a 76K-token prompt, and how much a real summariser keeps, are the open questions this was built to answer.
 - The cache model's breakpoints and lifetime follow Inspect's Anthropic provider as read from its source (v0.3.289). It has not been checked against live usage numbers.
 - The workload is synthetic and fact-shaped. It tests counting, but not inventory ("what have we worked on") or temporal ordering.
 - Current Claude models bind thinking blocks to the conversation that produced them. Inspect's Anthropic provider (v0.3.289) asks the API to drop a block whose history was edited instead of rejecting the request, and logs each drop. So trim, edit and summary should run on Claude 5.x through the first-party API, but lose reasoning each time they edit. The report counts those drops per strategy on a live run; none has been measured yet.
@@ -126,7 +138,7 @@ What is different here: the strategies are Inspect's shipped implementations, an
 
 1. Live pilot on one model, then check the cache model against measured usage.
 2. Run the memory-tool arms and native compaction live (both are wired; neither has met a real model).
-3. A LongMemEval adapter for external validity, offered upstream to `inspect_evals`.
+3. Run the LongMemEval adapter on the real data, check the judge against a hand-labelled sample, then offer it upstream to `inspect_evals`.
 4. Inventory and temporal probes.
 5. Extend the regression gate to live runs, with tolerances set from run-to-run variance.
 

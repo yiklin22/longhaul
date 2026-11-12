@@ -100,7 +100,9 @@ def submit_change(desk: Desk) -> Tool:
     return execute
 
 
-def make_strategy(name: str, threshold: int | float, keep_tool_uses: int, preserve: float, memory: bool) -> CompactionStrategy | None:
+def make_strategy(name: str, threshold: int | float, keep_tool_uses: int, preserve: float, memory: bool,
+                  instructions: str | None = None) -> CompactionStrategy | None:
+    instructions = instructions or SUMMARY_INSTRUCTIONS
     if name == "none":
         return None
     if name == "trim":
@@ -108,11 +110,11 @@ def make_strategy(name: str, threshold: int | float, keep_tool_uses: int, preser
     if name == "edit":
         return CompactionEdit(threshold=threshold, keep_tool_uses=keep_tool_uses, memory=memory)
     if name == "summary":
-        return CompactionSummary(threshold=threshold, memory=memory, instructions=SUMMARY_INSTRUCTIONS)
+        return CompactionSummary(threshold=threshold, memory=memory, instructions=instructions)
     if name == "native":
-        return CompactionNative(threshold=threshold, instructions=SUMMARY_INSTRUCTIONS, memory=memory)
+        return CompactionNative(threshold=threshold, instructions=instructions, memory=memory)
     if name == "auto":
-        return CompactionAuto(threshold=threshold, instructions=SUMMARY_INSTRUCTIONS, memory=memory)
+        return CompactionAuto(threshold=threshold, instructions=instructions, memory=memory)
     raise ValueError(f"unknown strategy {name!r}; use none, trim, edit, summary, native or auto")
 
 
