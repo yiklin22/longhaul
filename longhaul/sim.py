@@ -26,6 +26,8 @@ ARMS = [
     ("trim, keep 50%", {"strategy": "trim", "preserve": 0.5}),
     ("edit, keep 3 tool results", {"strategy": "edit", "keep_tool_uses": 3}),
     ("summary", {"strategy": "summary"}),
+    ("trim + memory tool", {"strategy": "trim", "preserve": 0.5, "memory": True}),
+    ("edit + memory tool", {"strategy": "edit", "keep_tool_uses": 3, "memory": True}),
 ]
 
 
@@ -41,8 +43,8 @@ def run(kind: str, turns: int, seeds: int, threshold: int, noise_chars: int, per
                 raise RuntimeError(f"{label}: {log.status} {log.error}")
             arm = arm_stats(log, gap_s=gap)
             arm["label"] = label
-            if params["strategy"] == "summary":
-                # The mock summariser copies facts verbatim, so its score is true by construction, not a finding.
+            if params["strategy"] == "summary" or params.get("memory"):
+                # The mock summariser and note-taker copy facts verbatim, so their score is true by construction, not a finding.
                 arm["accuracy_override"] = "needs a live run"
             arms.append(arm)
     return arms

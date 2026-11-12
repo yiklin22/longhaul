@@ -16,9 +16,10 @@ from inspect_ai.model import get_model
 
 from .oracle import make_mock
 from .report import arm_stats, pct
-from .sim import ARMS
+from .sim import ARMS as ALL_ARMS
 from .task import REGISTRY, longhaul
 
+ARMS = ALL_ARMS[:4]            # the memory-tool arms are priced in the main table only
 GAPS = [10, 120, 280, 400, 900, 2400, 4000]
 THRESHOLDS = [15000, 30000, 60000]
 MODEL = "claude-opus-5-5"

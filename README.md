@@ -10,7 +10,7 @@ It is built on [Inspect AI](https://github.com/UKGovernmentBEIS/inspect_ai), the
 
 | Piece | State |
 |---|---|
-| Workload, grading, Inspect task, cost model, report, regression gate | Built, 31 tests passing offline, CI green |
+| Workload, grading, Inspect task, cost model, report, regression gate | Built, 33 tests passing offline, CI green |
 | Offline results (below) | Real and reproducible: `python -m longhaul.sim` |
 | Live model results | **Not run yet.** No API key was available. Commands are below; nothing in this README is a live-model number |
 
@@ -24,6 +24,8 @@ It is built on [Inspect AI](https://github.com/UKGovernmentBEIS/inspect_ai), the
 | trim, keep 50% | 48% (42-53) | 30,650 | 1.35 | 14.75 |
 | edit, keep 3 tool results | 94% (91-96) | 32,212 | 1.14 | 13.35 |
 | summary | needs a live run | 34,059 | 1.34 | 11.41 |
+| trim + memory tool | needs a live run | 35,597 | 1.82 | 19.65 |
+| edit + memory tool | needs a live run | 38,883 | 1.57 | 18.32 |
 
 **What "evidence survival" means.** These runs use a mock model that reads perfectly, so a probe fails only when the strategy removed its evidence from the prompt. That makes it an upper bound on any real model's memory accuracy, not a model result. Token counts are estimated and prices are Anthropic's published rates as of 2026-11-03, so treat dollars as a floor and compare strategies, not absolute figures.
 
@@ -34,6 +36,8 @@ What the offline numbers already show:
 3. **Trimming forgets by distance.** Survival is 98% or better for evidence up to 30 turns back and 13% beyond 60 turns.
 4. **Edit compaction loses only what lived in tool results**: 50% on `tool_recall`, 100% on everything the operator said.
 5. **Trimming makes an agent wrong, not just forgetful.** On "how many" questions it was right 5% of the time, and the 38 failures were confident undercounts, not `UNKNOWN`: the agent cannot tell that part of the list is gone. Inspect's trim also pins the first user message, so in one probe the original value survived there while its later correction was trimmed.
+
+6. **A memory tool is not free.** Giving the agent Inspect's `memory()` tool, with the save-your-notes warning before each compaction, raises trim's cost from $1.35 to $1.82, about the price of sending full history ($1.84). Whether the notes recover what trimming drops is a live question; the mock note-taker saves everything, so its score is not a finding.
 
 ### Pauses between turns change the answer
 
@@ -50,9 +54,9 @@ Same runs, re-priced as the operator's pause between turns grows ($ per shift, O
 | 400 s to 40 min | 2.06 | 1.41 | 1.77 to 1.79 | 24.33 | 28.56 |
 | 67 min | 38.60 | 18.17 | 15.53 | 24.33 | 28.56 |
 
-6. **A pause just over five minutes costs 13 times more on a plain 5-minute cache** ($1.84 to $24.33), because every turn rewrites the whole prompt. Inspect's switch to one-hour entries holds it to $2.06.
-7. **Past an hour, caching full history costs more than not caching at all** ($38.60 against $28.56): every turn pays the one-hour write price, twice the input rate, and never reads it back. This is where summarising becomes the cheapest option.
-8. **A lower compaction threshold buys little for edit and costs trim a lot.** From 60,000 to 15,000 tokens, edit drops from 97% to 89% survival and trim from 71% to 30%.
+7. **A pause just over five minutes costs 13 times more on a plain 5-minute cache** ($1.84 to $24.33), because every turn rewrites the whole prompt. Inspect's switch to one-hour entries holds it to $2.06.
+8. **Past an hour, caching full history costs more than not caching at all** ($38.60 against $28.56): every turn pays the one-hour write price, twice the input rate, and never reads it back. This is where summarising becomes the cheapest option.
+9. **A lower compaction threshold buys little for edit and costs trim a lot.** From 60,000 to 15,000 tokens, edit drops from 97% to 89% survival and trim from 71% to 30%.
 
 ## How it works
 
@@ -75,7 +79,7 @@ The cost model ([longhaul/cost.py](longhaul/cost.py)) replays the exact messages
 
 ```bash
 uv venv && uv pip install -e .
-python -m unittest discover -s tests -t .       # 31 tests, no API key
+python -m unittest discover -s tests -t .       # 33 tests, no API key
 python -m longhaul.sim                          # the offline table above, about a minute
 python -m longhaul.sweep                        # pause and threshold sweeps, about three minutes
 python -m longhaul.gate                         # regression gate against baselines/offline.json
@@ -90,14 +94,14 @@ inspect eval longhaul/longhaul --model anthropic/claude-opus-5-5 --log-dir logs 
 python -m longhaul.report logs --out docs/results/live.md
 ```
 
-Strategies: `none`, `trim`, `edit`, `summary`, `native`, `auto`.
+Strategies: `none`, `trim`, `edit`, `summary`, `native`, `auto`. Add `-T memory=true` to give the agent the memory tool.
 
 **Price a sweep before running it:** `python -m longhaul.plan --turns 60 --seeds 3` prices the prompts the sweep would send. For that pilot (4 strategies, 3 shifts, 60 turns) the input-side floor is about $7.01 on Opus 5.5, $3.50 on Sonnet 5.5 and $0.27 on Haiku 5.5. Real runs cost more: output and thinking tokens are extra, and Claude's tokenizer tends to count more than the estimate. With 48 probes per strategy, that pilot only resolves differences larger than about 14 percentage points.
 
 ## Why the numbers can be trusted
 
 - **Known-good and known-bad models run through the whole pipeline in CI.** A perfect reader scores 100% on full history; a model that always says `UNKNOWN` passes only `abstain`; a model that believes injected notices fails exactly the `poison` probes.
-- **No answer is not a negative answer.** `abstained` and `no_answer` are separate outcomes, and overflow, truncation, refusal and step-limit are recorded as themselves. Errored samples are left out, not scored as zero.
+- **No answer is not a negative answer.** `abstained` and `no_answer` are separate outcomes, and overflow, truncation, refusal, step-limit and a strategy that cannot get under its threshold are recorded as themselves. Errored samples are left out, not scored as zero.
 - **Deterministic grading** on a final `ANSWER:` line, or on the tool's received arguments. Listing two candidate values does not pass.
 - **Both directions are covered.** Always answering fails `abstain`; always saying `UNKNOWN` fails the rest.
 - **Intervals on every rate**, and every headline is recomputed from per-probe rows in the log.
@@ -121,7 +125,7 @@ What is different here: the strategies are Inspect's shipped implementations, an
 ## Roadmap
 
 1. Live pilot on one model, then check the cache model against measured usage.
-2. Memory-tool arms (`memory=True`) and native compaction.
+2. Run the memory-tool arms and native compaction live (both are wired; neither has met a real model).
 3. A LongMemEval adapter for external validity, offered upstream to `inspect_evals`.
 4. Inventory and temporal probes.
 5. Extend the regression gate to live runs, with tolerances set from run-to-run variance.

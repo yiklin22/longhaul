@@ -28,6 +28,16 @@
       "survival": 1.0,
       "cost": 0.6033,
       "control": 1.0
+    },
+    "trim + memory tool": {
+      "survival": 1.0,
+      "cost": 0.7883,
+      "control": 1.0
+    },
+    "edit + memory tool": {
+      "survival": 1.0,
+      "cost": 0.7165,
+      "control": 1.0
     }
   }
 }

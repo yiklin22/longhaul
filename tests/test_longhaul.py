@@ -204,6 +204,16 @@ class HarnessTests(unittest.TestCase):
     def test_summary_that_copies_every_fact_loses_nothing(self):
         self.assertEqual(run("summary", "oracle")["memory"][0], run("none", "oracle")["memory"][0])
 
+    def test_memory_tool_arm_saves_before_compaction_and_reads_notes_back(self):
+        plain, noted = run("trim", "oracle"), run("trim", "oracle", memory=True)
+        self.assertLess(plain["memory"][0], plain["memory"][1])
+        self.assertEqual(noted["memory"][0], noted["memory"][1])                     # a note-taker that saves everything
+        self.assertGreater(noted["calls"], plain["calls"])                           # saving and reading cost calls
+
+    def test_strategy_that_cannot_fit_its_threshold_is_an_outcome_not_a_crash(self):
+        arm = run("edit", "oracle", memory=True, threshold=2500)
+        self.assertGreater(arm["outcomes"].get("compaction_failed", 0), 0)
+
     def test_caching_makes_full_history_far_cheaper_than_uncached(self):
         arm = run("none", "oracle")
         self.assertLess(arm["cost"]["claude-opus-5-5"] * 3, arm["cost_uncached"]["claude-opus-5-5"])

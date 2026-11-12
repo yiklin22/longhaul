@@ -10,6 +10,8 @@
 | trim, keep 50% | 48% (42-53) | 320 | 30,650 | 97% | 1.347 (uncached 14.751) | 0.674 (uncached 7.375) | 0.051 (uncached 0.369) |
 | edit, keep 3 tool results | 94% (91-96) | 320 | 32,212 | 97% | 1.143 (uncached 13.347) | 0.572 (uncached 6.673) | 0.045 (uncached 0.334) |
 | summary | needs a live run | 320 | 34,059 | 95% | 1.341 (uncached 11.412) | 0.671 (uncached 5.706) | 0.047 (uncached 0.285) |
+| trim + memory tool | needs a live run | 320 | 35,597 | 97% | 1.815 (uncached 19.654) | 0.908 (uncached 9.827) | 0.069 (uncached 0.491) |
+| edit + memory tool | needs a live run | 320 | 38,883 | 98% | 1.570 (uncached 18.318) | 0.785 (uncached 9.159) | 0.061 (uncached 0.458) |
 
 ### By category
 
@@ -19,6 +21,8 @@
 | trim, keep 50% | 60% (45-74) | 60% (45-74) | 62% (47-76) | 22% (12-38) | 100% (91-100) | 15% (7-29) | 55% (40-69) | 5% (1-17) | 100% (94-100) |
 | edit, keep 3 tool results | 100% (91-100) | 50% (35-65) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (94-100) |
 | summary | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | 100% (94-100) |
+| trim + memory tool | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | 100% (94-100) |
+| edit + memory tool | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | 100% (94-100) |
 
 ### What went wrong (memory probes)
 
@@ -28,6 +32,8 @@
 | trim, keep 50% | 1 | 0 | 129 | 38 | 0 | 0 |
 | edit, keep 3 tool results | 0 | 0 | 20 | 0 | 0 | 0 |
 | summary | 0 | 0 | 0 | 0 | 0 | 0 |
+| trim + memory tool | 0 | 0 | 0 | 0 | 0 | 0 |
+| edit + memory tool | 0 | 0 | 0 | 0 | 0 | 0 |
 
 ### By distance to the evidence
 
@@ -37,3 +43,5 @@
 | trim, keep 50% | 100% (81-100) n=16 | 98% (90-100) n=54 | 33% (24-45) n=75 | 13% (8-19) n=134 |
 | edit, keep 3 tool results | 100% (81-100) n=16 | 93% (82-97) n=54 | 92% (84-96) n=75 | 93% (87-96) n=134 |
 | summary | 100% (81-100) n=16 | 100% (93-100) n=54 | 100% (95-100) n=75 | 100% (97-100) n=134 |
+| trim + memory tool | 100% (81-100) n=16 | 100% (93-100) n=54 | 100% (95-100) n=75 | 100% (97-100) n=134 |
+| edit + memory tool | 100% (81-100) n=16 | 100% (93-100) n=54 | 100% (95-100) n=75 | 100% (97-100) n=134 |

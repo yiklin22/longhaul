@@ -25,7 +25,7 @@ from inspect_ai.model import (
 )
 from inspect_ai.scorer import Score, Target, mean, scorer, stderr
 from inspect_ai.solver import Generate, TaskState, solver
-from inspect_ai.tool import Tool, ToolError, tool
+from inspect_ai.tool import Tool, ToolError, memory, tool
 
 from .scenario import CATEGORIES, Config, Scenario, generate, grade
 
@@ -43,6 +43,13 @@ How to reply
 - When asked to apply a value, call submit_change with the value you were given earlier, then finish with ANSWER: DONE. If you do not know the value, do not call the tool; finish with ANSWER: UNKNOWN.
 
 Shift reference: {ref}"""
+
+MEMORY_RULES = """
+
+Notes
+- You have a memory tool. Your context may be compacted at any point, and anything not saved to memory can be lost.
+- Save account facts to a file under /memories as you learn them, with who stated each one (the operator, or a ticket).
+- Before answering from memory alone, or when a fact is missing from the conversation, check your notes."""
 
 SUMMARY_INSTRUCTIONS = ("This is an operations shift. Preserve every account fact exactly (account, attribute, value), "
                         "note which value is current when one was changed, and keep who stated each fact: the operator, "
@@ -110,13 +117,17 @@ def make_strategy(name: str, threshold: int | float, keep_tool_uses: int, preser
 
 
 @solver
-def shift(strategy: CompactionStrategy | None, max_steps: int = 6):
+def shift(strategy: CompactionStrategy | None, use_memory: bool = False, max_steps: int = 6):
     async def solve(state: TaskState, generate_fn: Generate) -> TaskState:
         scenario = REGISTRY.get(state.metadata["ref"]) or generate(Config(**state.metadata["config"]))
         desk = Desk(scenario)
-        tools = [fetch_ticket(desk), submit_change(desk)]
+        tools = [fetch_ticket(desk), submit_change(desk)] + ([memory()] if use_memory else [])
         model = get_model()
-        system = ChatMessageSystem(content=SYSTEM.format(ref=scenario.ref))
+        prompt = SYSTEM.format(ref=scenario.ref)
+        if use_memory:                                   # keep the shift reference as the last line
+            head, _, ref_line = prompt.rpartition("\n\n")
+            prompt = head + MEMORY_RULES + "\n\n" + ref_line
+        system = ChatMessageSystem(content=prompt)
         messages: list[ChatMessage] = [system]
         compact = compaction(strategy, prefix=[system], tools=tools) if strategy else None
         rows: list[dict] = []
@@ -132,7 +143,13 @@ def shift(strategy: CompactionStrategy | None, max_steps: int = 6):
             reply, status, steps, forced = "", "ok", 0, False
             while True:
                 if compact:
-                    model_input, summary = await compact.compact_input(messages, force=forced)
+                    try:
+                        model_input, summary = await compact.compact_input(messages, force=forced)
+                    except RuntimeError as err:          # the strategy could not get under its threshold
+                        if "Compaction insufficient" not in str(err):
+                            raise
+                        status = halted = "compaction_failed"
+                        break
                     if summary:
                         messages.append(summary)
                 else:
@@ -216,7 +233,7 @@ def longhaul(strategy: str = "none", threshold: int = 60000, turns: int = 60, se
         per_category: Fact threads per memory category in each shift.
         keep_tool_uses: For `edit`: recent tool results kept.
         preserve: For `trim`: share of messages kept.
-        memory: Let compaction warn the model to save to the memory tool first (needs the memory tool).
+        memory: Give the agent the memory tool, and let compaction warn it to save notes before compacting.
     """
     samples = []
     for seed in range(start_seed, start_seed + seeds):
@@ -227,8 +244,8 @@ def longhaul(strategy: str = "none", threshold: int = 60000, turns: int = 60, se
                               metadata={"ref": scenario.ref, "config": config.__dict__ | {}}))
     return Task(
         dataset=samples,
-        solver=shift(make_strategy(strategy, threshold, keep_tool_uses, preserve, memory)),
+        solver=shift(make_strategy(strategy, threshold, keep_tool_uses, preserve, memory), use_memory=memory),
         scorer=shift_scorer(),
-        metadata={"strategy": strategy, "threshold": threshold, "turns": turns, "noise_chars": noise_chars},
-        name=f"longhaul_{strategy}",
+        metadata={"strategy": strategy + ("+memory" if memory else ""), "threshold": threshold, "turns": turns, "noise_chars": noise_chars},
+        name=f"longhaul_{strategy}" + ("_memory" if memory else ""),
     )
