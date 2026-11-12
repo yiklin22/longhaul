@@ -10,30 +10,30 @@ It is built on [Inspect AI](https://github.com/UKGovernmentBEIS/inspect_ai), the
 
 | Piece | State |
 |---|---|
-| Workload, grading, Inspect task, cost model, report | Built, 29 tests passing offline |
+| Workload, grading, Inspect task, cost model, report, regression gate | Built, 31 tests passing offline, CI green |
 | Offline results (below) | Real and reproducible: `python -m longhaul.sim` |
 | Live model results | **Not run yet.** No API key was available. Commands are below; nothing in this README is a live-model number |
 
 ## Offline results
 
-10 shifts of 120 turns, 280 memory probes per strategy, compaction threshold 30,000 tokens. Full table: [docs/results/offline.md](docs/results/offline.md).
+10 shifts of 120 turns, 320 memory probes per strategy, compaction threshold 30,000 tokens. Full table: [docs/results/offline.md](docs/results/offline.md).
 
 | strategy | evidence survival (95% CI) | peak prompt tokens | $ / shift on Opus 5.5, cached | same, uncached |
 |---|---|---|---|---|
-| none (full history) | 100% (99-100) | 76,013 | 1.93 | 29.95 |
-| trim, keep 50% | 53% (47-59) | 30,806 | 1.43 | 15.32 |
-| edit, keep 3 tool results | 93% (89-95) | 32,179 | 1.20 | 13.99 |
-| summary | needs a live run | 34,014 | 1.39 | 11.89 |
+| none (full history) | 100% (99-100) | 71,884 | 1.84 | 28.56 |
+| trim, keep 50% | 48% (42-53) | 30,650 | 1.35 | 14.75 |
+| edit, keep 3 tool results | 94% (91-96) | 32,212 | 1.14 | 13.35 |
+| summary | needs a live run | 34,059 | 1.34 | 11.41 |
 
 **What "evidence survival" means.** These runs use a mock model that reads perfectly, so a probe fails only when the strategy removed its evidence from the prompt. That makes it an upper bound on any real model's memory accuracy, not a model result. Token counts are estimated and prices are Anthropic's published rates as of 2026-11-03, so treat dollars as a floor and compare strategies, not absolute figures.
 
 What the offline numbers already show:
 
-1. **Caching outweighs the choice of strategy.** Full history costs $1.93 a shift with caching and $29.95 without. The best strategy saves 38% on top of caching; turning caching off costs 15 times more.
-2. **Clearing old tool results beat trimming on both axes here**: 93% against 53% survival, at $1.20 against $1.43.
-3. **Trimming forgets by distance.** Survival is 98% for evidence up to 30 turns back and 16% beyond 60 turns.
+1. **Caching outweighs the choice of strategy.** Full history costs $1.84 a shift with caching and $28.56 without. The best strategy saves 38% on top of caching; turning caching off costs about 15 times more.
+2. **Clearing old tool results beat trimming on both axes here**: 94% against 48% survival, at $1.14 against $1.35.
+3. **Trimming forgets by distance.** Survival is 98% or better for evidence up to 30 turns back and 13% beyond 60 turns.
 4. **Edit compaction loses only what lived in tool results**: 50% on `tool_recall`, 100% on everything the operator said.
-5. **Trimming can make an agent wrong, not just forgetful.** Inspect's trim pins the first user message. In one probe of 280 the original value survived there while the later correction was trimmed, so the retired value was the only one left to read.
+5. **Trimming makes an agent wrong, not just forgetful.** On "how many" questions it was right 5% of the time, and the 38 failures were confident undercounts, not `UNKNOWN`: the agent cannot tell that part of the list is gone. Inspect's trim also pins the first user message, so in one probe the original value survived there while its later correction was trimmed.
 
 ### Pauses between turns change the answer
 
@@ -41,13 +41,13 @@ Same runs, re-priced as the operator's pause between turns grows ($ per shift, O
 
 | pause between turns | full history | edit | summary | full history, 5-minute cache only | no cache |
 |---|---|---|---|---|---|
-| up to 280 s | 1.93 | 1.20 | 1.40 | 1.93 | 29.95 |
-| 400 s to 40 min | 2.17 | 1.48 | 1.83 to 1.85 | 24.67 | 29.95 |
-| 67 min | 39.10 | 18.64 | 15.99 | 24.67 | 29.95 |
+| up to 280 s | 1.84 | 1.14 | 1.34 to 1.35 | 1.84 | 28.56 |
+| 400 s to 40 min | 2.06 | 1.41 | 1.77 to 1.79 | 24.33 | 28.56 |
+| 67 min | 38.60 | 18.17 | 15.53 | 24.33 | 28.56 |
 
-6. **A pause just over five minutes costs 13 times more on a plain 5-minute cache** ($1.93 to $24.67), because every turn rewrites the whole prompt. Inspect's switch to one-hour entries holds it to $2.17.
-7. **Past an hour, caching full history costs more than not caching at all** ($39.10 against $29.95): every turn pays the one-hour write price, twice the input rate, and never reads it back. This is where summarising becomes the cheapest option.
-8. **A lower compaction threshold buys little for edit and costs trim a lot.** From 60,000 to 15,000 tokens, edit drops from 96% to 87% survival and trim from 78% to 32%.
+6. **A pause just over five minutes costs 13 times more on a plain 5-minute cache** ($1.84 to $24.33), because every turn rewrites the whole prompt. Inspect's switch to one-hour entries holds it to $2.06.
+7. **Past an hour, caching full history costs more than not caching at all** ($38.60 against $28.56): every turn pays the one-hour write price, twice the input rate, and never reads it back. This is where summarising becomes the cheapest option.
+8. **A lower compaction threshold buys little for edit and costs trim a lot.** From 60,000 to 15,000 tokens, edit drops from 97% to 89% survival and trim from 71% to 30%.
 
 ## How it works
 
@@ -61,15 +61,16 @@ One sample is one long support shift. The operator states account facts, changes
 | `abstain` | never stated; the right answer is `UNKNOWN` |
 | `poison` | a tool result claims another value; answering it is scored `poisoned` |
 | `action` | the value must reach a tool call; graded on what the tool received |
+| `count` | how many accounts the operator gave a kind of fact for; needs every one |
 | `control` | answer is in the same turn; needs no memory |
 
-The cost model ([longhaul/cost.py](longhaul/cost.py)) replays the exact messages of every model call in an Inspect log through a prefix-cache simulation: breakpoints, minimum cacheable size, 20-block lookback, 5-minute lifetime. It works on any Inspect agent log. On a live run it also prints the provider's own cache numbers beside its prediction, so a predicted hit billed as a miss exposes a silent cache invalidator.
+The cost model ([longhaul/cost.py](longhaul/cost.py)) replays the exact messages of every model call in an Inspect log through a prefix-cache simulation: breakpoints, minimum cacheable size, 20-block lookback, and the 5-minute and 1-hour lifetimes. It works on any Inspect agent log. On a live run it also prints the provider's own cache numbers beside its prediction, so a predicted hit billed as a miss exposes a silent cache invalidator.
 
 ## Run it
 
 ```bash
 uv venv && uv pip install -e .
-python -m unittest discover -s tests -t .       # 29 tests, no API key
+python -m unittest discover -s tests -t .       # 31 tests, no API key
 python -m longhaul.sim                          # the offline table above, about a minute
 python -m longhaul.sweep                        # pause and threshold sweeps, about three minutes
 python -m longhaul.gate                         # regression gate against baselines/offline.json
@@ -98,7 +99,7 @@ Strategies: `none`, `trim`, `edit`, `summary`, `native`, `auto`. **Cost before y
 
 - No live-model result exists yet. How well a real model reads a 76K-token prompt, and how much a real summariser keeps, are the open questions this was built to answer.
 - The cache model's breakpoints and lifetime follow Inspect's Anthropic provider as read from its source (v0.3.289). It has not been checked against live usage numbers.
-- The workload is synthetic and fact-shaped. It does not test counting, inventory ("what have we worked on") or temporal ordering.
+- The workload is synthetic and fact-shaped. It tests counting, but not inventory ("what have we worked on") or temporal ordering.
 - Current Claude models bind thinking blocks to the conversation that produced them. Inspect's Anthropic provider (v0.3.289) asks the API to drop a block whose history was edited instead of rejecting the request, and logs each drop. So trim, edit and summary should run on Claude 5.x through the first-party API, but lose reasoning each time they edit. The report counts those drops per strategy on a live run; none has been measured yet.
 
 ## Related work
@@ -114,7 +115,7 @@ What is different here: the strategies are Inspect's shipped implementations, an
 1. Live pilot on one model, then check the cache model against measured usage.
 2. Memory-tool arms (`memory=True`) and native compaction.
 3. A LongMemEval adapter for external validity, offered upstream to `inspect_evals`.
-4. Inventory, counting and temporal probes.
+4. Inventory and temporal probes.
 5. Extend the regression gate to live runs, with tolerances set from run-to-run variance.
 
 ## Using it on a customer deployment

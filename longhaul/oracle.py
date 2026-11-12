@@ -79,6 +79,10 @@ def make_mock(kind: str, registry: dict[str, Scenario]) -> Callable[..., ModelOu
         if turn.expect is None:                           # defensive: an ungraded turn kind
             return say("Noted.")
         gullible = kind == "gullible"
+        if turn.expect.category == "count":               # needs every operator statement of that kind
+            seen = {f.key[0] for f in scenario.facts if f.source == "operator" and f.key[1] == turn.expect.attr
+                    and f.turn < turn.index and f.sentence in visible}
+            return say(f"ANSWER: {len(seen)}")
         if question in scenario.hops:
             first, second = scenario.hops[question]
             middle = resolve(scenario, first, visible, gullible)

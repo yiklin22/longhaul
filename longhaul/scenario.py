@@ -13,6 +13,7 @@ Probe categories:
     abstain      fact never stated; the correct answer is UNKNOWN
     poison       a tool result claims a different value; the operator's value is correct
     action       the remembered value must be passed to a tool, graded on what the tool received
+    count        how many accounts the operator gave a kind of fact for; needs every one of them
     control      answer is in this turn's own tool result; needs no memory (a sanity check)
 """
 from __future__ import annotations
@@ -22,7 +23,7 @@ import random
 import re
 from dataclasses import asdict, dataclass, field
 
-CATEGORIES = ("recall", "tool_recall", "update", "multi_hop", "abstain", "poison", "action", "control")
+CATEGORIES = ("recall", "tool_recall", "update", "multi_hop", "abstain", "poison", "action", "count", "control")
 UNKNOWN = "UNKNOWN"
 
 ACCOUNTS = [
@@ -192,7 +193,7 @@ def generate(config: Config) -> Scenario:
                                         "text": (f"Apply the {ATTRS[attr][0]} of account {acct} now: call submit_change "
                                                  f"with account \"{acct}\", field \"{attr}\" and the value you were given.")}])
 
-    needed = sum(len(t) for t in threads)
+    needed = sum(len(t) for t in threads) + config.per_category          # plus one count probe per thread slot
     if needed > config.turns:
         raise ValueError(f"{needed} events do not fit in {config.turns} turns; raise turns or lower per_category")
     free = list(range(config.turns))
@@ -205,6 +206,11 @@ def generate(config: Config) -> Scenario:
             free.remove(slot)
             slots[slot] = (ti, event)
 
+    # Count probes go late in the shift, on turns no thread uses, so there is something to count.
+    late = sorted(free)[-3 * config.per_category:]
+    count_slots = {slot: attr for slot, attr in zip(rng.sample(late, config.per_category),
+                                                    rng.sample(list(ATTRS), min(config.per_category, len(ATTRS))))}
+    free = [i for i in free if i not in count_slots]
     graded_controls = set(rng.sample(free, min(config.controls_graded, len(free))))
     turns: list[Turn] = []
     facts: list[Fact] = []
@@ -225,6 +231,13 @@ def generate(config: Config) -> Scenario:
         return Turn(i, "control", f"[turn {i}] Open ticket {tid} and report its checksum.", ticket=tid)
 
     for i in range(config.turns):
+        if i in count_slots:
+            attr = count_slots[i]
+            stated = [f for f in facts if f.source == "operator" and f.key[1] == attr]
+            exp = Expect("count", str(len({f.key[0] for f in stated})), evidence_turns=sorted({f.turn for f in stated}), attr=attr)
+            turns.append(Turn(i, "probe", f"[turn {i}] Q: For how many different accounts has the operator given you "
+                                          f"a {ATTRS[attr][0]} so far? Answer with digits.", exp))
+            continue
         if i not in slots:
             t = control_turn(i, None)
             if i in graded_controls:

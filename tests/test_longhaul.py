@@ -16,7 +16,7 @@ from longhaul.task import REGISTRY, longhaul
 
 
 def run(strategy: str, mock: str, **kw):
-    params = {"turns": 40, "seeds": 2, "noise_chars": 1200, "threshold": 8000, **kw}
+    params = {"turns": 60, "seeds": 2, "noise_chars": 1200, "threshold": 6000, **kw}
     with tempfile.TemporaryDirectory() as tmp:
         task = longhaul(strategy=strategy, **params)
         log = inspect_eval(task, model=get_model("mockllm/model", custom_outputs=make_mock(mock, REGISTRY)),
@@ -45,7 +45,7 @@ class ScenarioTests(unittest.TestCase):
     def test_gold_answer_never_appears_in_the_question(self):
         for seed in range(5):
             for t in generate(Config(seed=seed)).graded():
-                if t.expect.gold != UNKNOWN and t.expect.category != "control":
+                if t.expect.gold != UNKNOWN and t.expect.category not in ("control", "count"):
                     self.assertNotIn(t.expect.gold, t.text)
 
     def test_abstain_pairs_are_never_stated_anywhere(self):
@@ -54,6 +54,14 @@ class ScenarioTests(unittest.TestCase):
         for t in s.graded():
             if t.expect.category == "abstain":
                 self.assertNotIn((t.expect.account, t.expect.attr), stated)
+
+    def test_count_probe_gold_matches_the_operator_statements_before_it(self):
+        s = generate(Config(seed=5, turns=80, per_category=3))
+        counts = [t for t in s.graded() if t.expect.category == "count"]
+        self.assertEqual(len(counts), 3)
+        for t in counts:
+            stated = {f.key[0] for f in s.facts if f.source == "operator" and f.key[1] == t.expect.attr and f.turn < t.index}
+            self.assertEqual(t.expect.gold, str(len(stated)))
 
     def test_too_many_events_for_the_turns_is_an_error(self):
         with self.assertRaises(ValueError):
@@ -182,6 +190,11 @@ class HarnessTests(unittest.TestCase):
         self.assertLess(trimmed["memory"][0], full["memory"][0])
         self.assertLess(trimmed["peak_prompt"], full["peak_prompt"])
         self.assertEqual(rate(trimmed, "control"), 1.0)                              # same-turn work is unaffected
+
+    def test_trimming_makes_counts_wrong_rather_than_unknown(self):
+        trimmed = run("trim", "oracle", turns=80, seeds=4, per_category=3, threshold=6000)
+        self.assertLess(rate(trimmed, "count"), 1.0)
+        self.assertGreater(trimmed["outcomes"].get("wrong", 0), 0)
 
     def test_edit_compaction_loses_only_tool_result_facts(self):
         arm = run("edit", "oracle")

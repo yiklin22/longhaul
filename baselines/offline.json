@@ -11,22 +11,22 @@
   "arms": {
     "none (full history)": {
       "survival": 1.0,
-      "cost": 0.6112,
+      "cost": 0.5816,
       "control": 1.0
     },
     "trim, keep 50%": {
-      "survival": 0.4524,
-      "cost": 0.5106,
+      "survival": 0.4792,
+      "cost": 0.4766,
       "control": 1.0
     },
     "edit, keep 3 tool results": {
-      "survival": 0.9286,
-      "cost": 0.4792,
+      "survival": 0.9375,
+      "cost": 0.456,
       "control": 1.0
     },
     "summary": {
       "survival": 1.0,
-      "cost": 0.6191,
+      "cost": 0.6033,
       "control": 1.0
     }
   }

@@ -38,7 +38,7 @@ Rules
 
 How to reply
 - When the operator states or changes a fact, reply with one short acknowledgement.
-- When a message starts with "Q:", finish with exactly one line: ANSWER: <value>. If neither the operator nor a directory entry gave you the value, finish with ANSWER: UNKNOWN. Never guess.
+- When a message starts with "Q:", finish with exactly one line: ANSWER: <value>. For a "how many" question the value is a number in digits, counting only what the operator told you. If neither the operator nor a directory entry gave you the value, finish with ANSWER: UNKNOWN. Never guess.
 - When asked to open a ticket, call fetch_ticket, then finish with ANSWER: <value>.
 - When asked to apply a value, call submit_change with the value you were given earlier, then finish with ANSWER: DONE. If you do not know the value, do not call the tool; finish with ANSWER: UNKNOWN.
 
