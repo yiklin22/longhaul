@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "longhaul"
+version = "0.1.0"
+description = "Which context strategy keeps a long-running agent correct, and what does it cost? An Inspect AI eval with a cache-aware cost model."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = ["inspect-ai>=0.3.289"]
+
+[project.optional-dependencies]
+live = ["anthropic"]
+
+[project.entry-points.inspect_ai]
+longhaul = "longhaul._registry"
+
+[tool.hatch.build.targets.wheel]
+packages = ["longhaul"]
