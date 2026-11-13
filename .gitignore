@@ -5,3 +5,8 @@ logs/
 *.eval
 .env
 dist/
+.env.*
+!.env.example
+*.db
+*.sqlite
+*.sqlite3
