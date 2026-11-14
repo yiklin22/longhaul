@@ -1,0 +1,54 @@
+{
+  "model": "claude-haiku-5-5",
+  "cost_rise": 0.15,
+  "arms": {
+    "edit": {
+      "correct": 47,
+      "probes": 48,
+      "cost": 0.022538,
+      "accuracy": 0.9792,
+      "floor": 0.891,
+      "cost_ceiling": 0.025919
+    },
+    "edit+memory": {
+      "correct": 47,
+      "probes": 48,
+      "cost": 0.044482,
+      "accuracy": 0.9792,
+      "floor": 0.891,
+      "cost_ceiling": 0.051154
+    },
+    "none": {
+      "correct": 48,
+      "probes": 48,
+      "cost": 0.031709,
+      "accuracy": 1.0,
+      "floor": 0.9259,
+      "cost_ceiling": 0.036465
+    },
+    "summary": {
+      "correct": 47,
+      "probes": 48,
+      "cost": 0.026628,
+      "accuracy": 0.9792,
+      "floor": 0.891,
+      "cost_ceiling": 0.030623
+    },
+    "trim": {
+      "correct": 33,
+      "probes": 48,
+      "cost": 0.026328,
+      "accuracy": 0.6875,
+      "floor": 0.5467,
+      "cost_ceiling": 0.030277
+    },
+    "trim+memory": {
+      "correct": 47,
+      "probes": 48,
+      "cost": 0.049489,
+      "accuracy": 0.9792,
+      "floor": 0.891,
+      "cost_ceiling": 0.056912
+    }
+  }
+}
