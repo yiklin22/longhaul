@@ -10,7 +10,7 @@ It is built on [Inspect AI](https://github.com/UKGovernmentBEIS/inspect_ai), the
 
 | Piece | State |
 |---|---|
-| Workload, grading, Inspect task, cost model, report, regression gate | Built, 39 tests passing offline, CI green |
+| Workload, grading, Inspect task, cost model, report, regression gate | Built, 45 tests passing offline, CI green |
 | Offline results (below) | Real and reproducible: `python -m longhaul.sim` |
 | Live model results | **Not run yet.** No API key was available. Commands are below; nothing in this README is a live-model number |
 
@@ -78,7 +78,7 @@ The cost model ([longhaul/cost.py](longhaul/cost.py)) replays the exact messages
 
 ```bash
 uv venv && uv pip install -e .
-python -m unittest discover -s tests -t .       # 39 tests, no API key
+python -m unittest discover -s tests -t .       # 45 tests, no API key
 python -m longhaul.sim                          # the offline table above, about a minute
 python -m longhaul.sweep                        # pause and threshold sweeps, about three minutes
 python -m longhaul.gate                         # regression gate against baselines/offline.json
@@ -94,6 +94,8 @@ python -m longhaul.report logs --out docs/results/live.md
 ```
 
 Strategies: `none`, `trim`, `edit`, `summary`, `native`, `auto`. Add `-T memory=true` to give the agent the memory tool.
+
+**Live regression gate** (not in CI, since a live run costs API spend): `python -m longhaul.gate --live logs` compares a directory with one log per strategy against `baselines/live-<model>.json` and exits 1 if a strategy's memory accuracy falls below the baseline's 95% Wilson lower bound or its measured cost per shift rises more than 15%. Add `--update` to accept a run as that model's baseline; the committed one is the Haiku 5.5 pilot.
 
 **Price a sweep before running it:** `python -m longhaul.plan --turns 60 --seeds 3` prices the prompts the sweep would send. For that pilot (6 strategies, 3 shifts, 60 turns) the input-side floor is about $11.17 on Opus 5.5, $5.58 on Sonnet 5.5 and $0.43 on Haiku 5.5. Real runs cost more: output and thinking tokens are extra, and Claude's tokenizer tends to count more than the estimate. With 48 probes per strategy, that pilot only resolves differences larger than about 14 percentage points.
 
@@ -139,7 +141,7 @@ What is different here: the strategies are Inspect's shipped implementations, an
 2. Run the memory-tool arms and native compaction live (both are wired; neither has met a real model).
 3. Run the LongMemEval adapter on the real data, check the judge against a hand-labelled sample, then offer it upstream to `inspect_evals`.
 4. Inventory and temporal probes.
-5. Extend the regression gate to live runs, with tolerances set from run-to-run variance.
+5. Live regression gate: built (`python -m longhaul.gate --live`). From one run, the accuracy floor is the baseline's 95% Wilson lower bound and cost gets a fixed 15% tolerance. Next, repeat the pilot and set both from measured run-to-run variance.
 
 ## Using it on a customer deployment
 

@@ -8,7 +8,7 @@ from inspect_ai.model import get_model
 from types import SimpleNamespace
 
 from longhaul.cost import CARDS, Call, PrefixCache, dropped_thinking, price
-from longhaul.gate import compare
+from longhaul.gate import compare, compare_live, live_baseline, live_summary
 from longhaul.oracle import make_mock
 from longhaul.report import arm_stats, wilson
 from longhaul.scenario import CATEGORIES, UNKNOWN, Config, Expect, generate, grade, parse_answer
@@ -231,6 +231,47 @@ class GateTests(unittest.TestCase):
         self.assertEqual(len(compare(self.base, {"edit": {"survival": 0.80, "cost": 1.00, "control": 1.0}}, 0.02, 0.05)), 1)
         self.assertEqual(len(compare(self.base, {"edit": {"survival": 0.90, "cost": 1.20, "control": 0.9}}, 0.02, 0.05)), 2)
         self.assertEqual(len(compare(self.base, {}, 0.02, 0.05)), 1)
+
+
+def synthetic_arm(strategy, correct, cost, probes=48, model="anthropic/claude-haiku-5-5"):
+    """Only the arm_stats fields the live gate reads."""
+    return {"strategy": strategy, "model": model, "shifts": 3, "memory": (correct, probes),
+            "measured": {"cost": {card: cost for card in CARDS}}}
+
+
+class LiveGateTests(unittest.TestCase):
+    base_arms = [synthetic_arm("edit", 47, 0.0225), synthetic_arm("trim", 33, 0.0263)]
+
+    def gate(self, arms):
+        baseline = live_baseline(*live_summary(self.base_arms))
+        return compare_live(baseline, *live_summary(arms))
+
+    def test_identical_run_passes(self):
+        self.assertEqual(self.gate(self.base_arms), [])
+
+    def test_drop_inside_sampling_noise_passes(self):
+        # 33/48 has a Wilson floor of about 55%, so 28/48 (58%) is consistent with the same strategy
+        self.assertEqual(self.gate([synthetic_arm("edit", 44, 0.0225), synthetic_arm("trim", 28, 0.0263)]), [])
+
+    def test_clear_drop_or_cost_rise_fails(self):
+        problems = self.gate([synthetic_arm("edit", 30, 0.0225), synthetic_arm("trim", 33, 0.0263 * 1.3)])
+        self.assertEqual(len(problems), 2)
+        self.assertIn("edit: memory accuracy", problems[0])
+        self.assertIn("trim: measured cost", problems[1])
+
+    def test_missing_strategy_fails(self):
+        self.assertEqual(self.gate([synthetic_arm("edit", 47, 0.0225)]), ["trim: missing from the current run"])
+
+    def test_different_model_is_refused(self):
+        with self.assertRaises(ValueError):
+            self.gate([synthetic_arm("edit", 47, 0.0225, model="anthropic/claude-sonnet-5-5"),
+                       synthetic_arm("trim", 33, 0.0263, model="anthropic/claude-sonnet-5-5")])
+
+    def test_mixed_models_or_duplicate_strategy_are_refused(self):
+        with self.assertRaises(ValueError):
+            live_summary([synthetic_arm("edit", 47, 0.0225), synthetic_arm("trim", 33, 0.0263, model="anthropic/claude-sonnet-5-5")])
+        with self.assertRaises(ValueError):
+            live_summary([synthetic_arm("edit", 47, 0.0225), synthetic_arm("edit", 40, 0.0225)])
 
 
 if __name__ == "__main__":
