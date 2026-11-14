@@ -22,47 +22,47 @@
 <text x="650.0" y="408" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="#898781">67 min</text>
 <line x1="303.5" y1="92" x2="303.5" y2="388" stroke="#898781" stroke-width="1" stroke-dasharray="2 4"/><text x="297.5" y="104" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#52514e">5-minute cache lifetime</text>
 <line x1="600.5" y1="92" x2="600.5" y2="388" stroke="#898781" stroke-width="1" stroke-dasharray="2 4"/><text x="594.5" y="104" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="11" text-anchor="end" fill="#52514e">1 hour</text>
-<line x1="56" y1="134.4" x2="650" y2="134.4" stroke="#898781" stroke-width="1.5" stroke-dasharray="4 3"/>
-<polyline points="56.0,341.9 155.0,341.9 254.0,341.9 353.0,333.3 452.0,333.3 551.0,333.3 650.0,111.6" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round"/>
-<circle cx="56.0" cy="341.9" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="155.0" cy="341.9" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="254.0" cy="341.9" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="353.0" cy="333.3" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="452.0" cy="333.3" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="551.0" cy="333.3" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="650.0" cy="111.6" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
-<polyline points="56.0,341.9 155.0,341.9 254.0,341.9 353.0,146.5 452.0,146.5 551.0,146.5 650.0,146.5" fill="none" stroke="#eb6834" stroke-width="2" stroke-linejoin="round"/>
-<circle cx="56.0" cy="341.9" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="155.0" cy="341.9" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="254.0" cy="341.9" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="353.0" cy="146.5" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="452.0" cy="146.5" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="551.0" cy="146.5" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="650.0" cy="146.5" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
-<polyline points="56.0,378.1 155.0,378.1 254.0,378.1 353.0,362.0 452.0,362.0 551.0,362.0 650.0,168.6" fill="none" stroke="#1baf7a" stroke-width="2" stroke-linejoin="round"/>
-<circle cx="56.0" cy="378.1" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="155.0" cy="378.1" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="254.0" cy="378.1" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="353.0" cy="362.0" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="452.0" cy="362.0" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="551.0" cy="362.0" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="650.0" cy="168.6" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
-<polyline points="56.0,365.9 155.0,365.9 254.0,365.3 353.0,344.8 452.0,344.8 551.0,343.9 650.0,180.5" fill="none" stroke="#eda100" stroke-width="2" stroke-linejoin="round"/>
-<circle cx="56.0" cy="365.9" r="4" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="155.0" cy="365.9" r="4" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="254.0" cy="365.3" r="4" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="353.0" cy="344.8" r="4" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="452.0" cy="344.8" r="4" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="551.0" cy="343.9" r="4" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="650.0" cy="180.5" r="4" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
-<circle cx="664" cy="111.6" r="4" fill="#2a78d6"/>
-<text x="674" y="115.6" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#0b0b0b">Full history $38.60</text>
-<text x="674" y="138.4" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#0b0b0b">No cache $28.56</text>
-<circle cx="664" cy="149.4" r="4" fill="#eb6834"/>
-<text x="674" y="153.4" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#0b0b0b">5-minute cache only $24.33</text>
-<circle cx="664" cy="168.6" r="4" fill="#1baf7a"/>
-<text x="674" y="172.6" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#0b0b0b">Edit $18.17</text>
-<circle cx="664" cy="183.6" r="4" fill="#eda100"/>
-<text x="674" y="187.6" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#0b0b0b">Summary $15.53</text>
-<text x="64" y="331.9" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#0b0b0b">$1.84 with caching</text>
+<line x1="56" y1="168.0" x2="650" y2="168.0" stroke="#898781" stroke-width="1.5" stroke-dasharray="4 3"/>
+<polyline points="56.0,373.6 155.0,373.6 254.0,373.6 353.0,364.2 452.0,364.2 551.0,364.2 650.0,137.1" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="56.0" cy="373.6" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="155.0" cy="373.6" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="254.0" cy="373.6" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="353.0" cy="364.2" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="452.0" cy="364.2" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="551.0" cy="364.2" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="650.0" cy="137.1" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<polyline points="56.0,373.6 155.0,373.6 254.0,373.6 353.0,172.2 452.0,172.2 551.0,172.2 650.0,172.2" fill="none" stroke="#eb6834" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="56.0" cy="373.6" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="155.0" cy="373.6" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="254.0" cy="373.6" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="353.0" cy="172.2" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="452.0" cy="172.2" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="551.0" cy="172.2" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="650.0" cy="172.2" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
+<polyline points="56.0,396.8 155.0,396.8 254.0,396.8 353.0,382.2 452.0,382.2 551.0,382.2 650.0,173.2" fill="none" stroke="#1baf7a" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="56.0" cy="396.8" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="155.0" cy="396.8" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="254.0" cy="396.8" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="353.0" cy="382.2" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="452.0" cy="382.2" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="551.0" cy="382.2" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="650.0" cy="173.2" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
+<polyline points="56.0,388.8 155.0,388.8 254.0,388.8 353.0,371.1 452.0,371.1 551.0,370.5 650.0,183.0" fill="none" stroke="#eda100" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="56.0" cy="388.8" r="4" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="155.0" cy="388.8" r="4" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="254.0" cy="388.8" r="4" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="353.0" cy="371.1" r="4" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="452.0" cy="371.1" r="4" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="551.0" cy="370.5" r="4" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="650.0" cy="183.0" r="4" fill="#eda100" stroke="#fcfcfb" stroke-width="2"/>
+<circle cx="664" cy="137.1" r="4" fill="#2a78d6"/>
+<text x="674" y="141.1" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#0b0b0b">Full history $27.55</text>
+<text x="674" y="172.0" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#0b0b0b">No cache $18.31</text>
+<circle cx="664" cy="183.0" r="4" fill="#eb6834"/>
+<text x="674" y="187.0" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#0b0b0b">5-minute cache only $17.33</text>
+<circle cx="664" cy="198.0" r="4" fill="#1baf7a"/>
+<text x="674" y="202.0" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#0b0b0b">Edit $17.09</text>
+<circle cx="664" cy="213.0" r="4" fill="#eda100"/>
+<text x="674" y="217.0" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#0b0b0b">Summary $15.02</text>
+<text x="64" y="363.6" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#0b0b0b">$1.21 with caching</text>
 </svg>

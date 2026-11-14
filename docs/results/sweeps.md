@@ -8,13 +8,13 @@ Calls inside one turn's tool loop are 5 s apart. The cache follows Inspect's pol
 
 | pause between turns | none (full history) | trim, keep 50% | edit, keep 3 tool results | summary | full history, 5-minute cache only | full history, no cache |
 |---|---|---|---|---|---|---|
-| 10 s | 1.84 | 1.35 | 1.14 | 1.34 | 1.84 | 28.56 |
-| 120 s | 1.84 | 1.35 | 1.14 | 1.34 | 1.84 | 28.56 |
-| 280 s | 1.84 | 1.35 | 1.14 | 1.35 | 1.84 | 28.56 |
-| 400 s | 2.06 | 1.70 | 1.41 | 1.77 | 24.33 | 28.56 |
-| 15 min | 2.06 | 1.70 | 1.41 | 1.77 | 24.33 | 28.56 |
-| 40 min | 2.06 | 1.70 | 1.41 | 1.79 | 24.33 | 28.56 |
-| 67 min | 38.60 | 20.43 | 18.17 | 15.53 | 24.33 | 28.56 |
+| 10 s | 1.21 | 1.06 | 0.89 | 0.99 | 1.21 | 18.31 |
+| 120 s | 1.21 | 1.06 | 0.89 | 0.99 | 1.21 | 18.31 |
+| 280 s | 1.21 | 1.06 | 0.89 | 0.99 | 1.21 | 18.31 |
+| 400 s | 1.37 | 1.30 | 1.08 | 1.25 | 17.33 | 18.31 |
+| 15 min | 1.37 | 1.30 | 1.08 | 1.25 | 17.33 | 18.31 |
+| 40 min | 1.37 | 1.30 | 1.08 | 1.26 | 17.33 | 18.31 |
+| 67 min | 27.55 | 19.46 | 17.09 | 15.02 | 17.33 | 18.31 |
 
 ## Compaction threshold
 
@@ -22,6 +22,6 @@ Evidence survival and cost per shift, 10 s between turns.
 
 | strategy | 15,000 tokens | 30,000 tokens | 60,000 tokens |
 |---|---|---|---|
-| trim, keep 50% | 30%, $1.07 | 48%, $1.35 | 71%, $1.74 |
-| edit, keep 3 tool results | 89%, $1.08 | 94%, $1.14 | 97%, $1.50 |
-| summary | live only, $1.31 | live only, $1.34 | live only, $1.74 |
+| trim, keep 50% | 31%, $0.82 | 57%, $1.06 | 100%, $1.21 |
+| edit, keep 3 tool results | 92%, $0.81 | 94%, $0.89 | 100%, $1.21 |
+| summary | live only, $0.96 | live only, $0.99 | live only, $1.21 |

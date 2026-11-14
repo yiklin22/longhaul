@@ -6,31 +6,31 @@
 
 | strategy | evidence survival (95% CI) | n | peak prompt tokens | cache-read share | $ / shift, opus-5-5 | $ / shift, sonnet-5-5 | $ / shift, haiku-5-5 |
 |---|---|---|---|---|---|---|---|
-| none (full history) | 100% (99-100) | 320 | 71,884 | 99% | 1.837 (uncached 28.562) | 0.919 (uncached 14.281) | 0.081 (uncached 0.714) |
-| trim, keep 50% | 48% (42-53) | 320 | 30,650 | 97% | 1.347 (uncached 14.751) | 0.674 (uncached 7.375) | 0.051 (uncached 0.369) |
-| edit, keep 3 tool results | 94% (91-96) | 320 | 32,212 | 97% | 1.143 (uncached 13.347) | 0.572 (uncached 6.673) | 0.045 (uncached 0.334) |
-| summary | needs a live run | 320 | 34,059 | 95% | 1.341 (uncached 11.412) | 0.671 (uncached 5.706) | 0.047 (uncached 0.285) |
-| trim + memory tool | needs a live run | 320 | 35,597 | 97% | 1.815 (uncached 19.654) | 0.908 (uncached 9.827) | 0.069 (uncached 0.491) |
-| edit + memory tool | needs a live run | 320 | 38,883 | 98% | 1.570 (uncached 18.318) | 0.785 (uncached 9.159) | 0.061 (uncached 0.458) |
+| none (full history) | 100% (99-100) | 400 | 50,930 | 99% | 1.212 (uncached 18.312) | 0.606 (uncached 9.156) | 0.053 (uncached 0.458) |
+| trim, keep 50% | 57% (52-62) | 400 | 31,639 | 98% | 1.056 (uncached 12.615) | 0.528 (uncached 6.308) | 0.042 (uncached 0.315) |
+| edit, keep 3 tool results | 94% (92-96) | 400 | 31,272 | 98% | 0.895 (uncached 11.355) | 0.447 (uncached 5.677) | 0.036 (uncached 0.284) |
+| summary | needs a live run | 400 | 34,190 | 97% | 0.985 (uncached 9.976) | 0.493 (uncached 4.988) | 0.037 (uncached 0.249) |
+| trim + memory tool | needs a live run | 400 | 41,516 | 96% | 2.209 (uncached 21.798) | 1.105 (uncached 10.899) | 0.081 (uncached 0.545) |
+| edit + memory tool | needs a live run | 400 | 42,987 | 97% | 1.756 (uncached 19.514) | 0.878 (uncached 9.757) | 0.067 (uncached 0.488) |
 
 ### By category
 
-| strategy | recall | tool_recall | update | multi_hop | abstain | poison | action | count | control |
-|---|---|---|---|---|---|---|---|---|---|
-| none (full history) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (94-100) |
-| trim, keep 50% | 60% (45-74) | 60% (45-74) | 62% (47-76) | 22% (12-38) | 100% (91-100) | 15% (7-29) | 55% (40-69) | 5% (1-17) | 100% (94-100) |
-| edit, keep 3 tool results | 100% (91-100) | 50% (35-65) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (94-100) |
-| summary | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | 100% (94-100) |
-| trim + memory tool | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | 100% (94-100) |
-| edit + memory tool | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | 100% (94-100) |
+| strategy | recall | tool_recall | update | multi_hop | abstain | poison | action | count | inventory | temporal | control |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| none (full history) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (94-100) |
+| trim, keep 50% | 62% (47-76) | 52% (37-67) | 78% (62-88) | 55% (40-69) | 100% (91-100) | 52% (37-67) | 50% (35-65) | 38% (24-53) | 22% (12-38) | 58% (42-71) | 100% (94-100) |
+| edit, keep 3 tool results | 100% (91-100) | 45% (31-60) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (91-100) | 100% (94-100) |
+| summary | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | 100% (94-100) |
+| trim + memory tool | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | 100% (94-100) |
+| edit + memory tool | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | 100% (94-100) |
 
 ### What went wrong (memory probes)
 
 | strategy | stale | poisoned | abstained | wrong | no_answer | other |
 |---|---|---|---|---|---|---|
 | none (full history) | 0 | 0 | 0 | 0 | 0 | 0 |
-| trim, keep 50% | 1 | 0 | 129 | 38 | 0 | 0 |
-| edit, keep 3 tool results | 0 | 0 | 20 | 0 | 0 | 0 |
+| trim, keep 50% | 0 | 0 | 117 | 56 | 0 | 0 |
+| edit, keep 3 tool results | 0 | 0 | 22 | 0 | 0 | 0 |
 | summary | 0 | 0 | 0 | 0 | 0 | 0 |
 | trim + memory tool | 0 | 0 | 0 | 0 | 0 | 0 |
 | edit + memory tool | 0 | 0 | 0 | 0 | 0 | 0 |
@@ -39,9 +39,9 @@
 
 | strategy | <= 10 turns | 11-30 turns | 31-60 turns | > 60 turns |
 |---|---|---|---|---|
-| none (full history) | 100% (81-100) n=16 | 100% (93-100) n=54 | 100% (95-100) n=75 | 100% (97-100) n=134 |
-| trim, keep 50% | 100% (81-100) n=16 | 98% (90-100) n=54 | 33% (24-45) n=75 | 13% (8-19) n=134 |
-| edit, keep 3 tool results | 100% (81-100) n=16 | 93% (82-97) n=54 | 92% (84-96) n=75 | 93% (87-96) n=134 |
-| summary | 100% (81-100) n=16 | 100% (93-100) n=54 | 100% (95-100) n=75 | 100% (97-100) n=134 |
-| trim + memory tool | 100% (81-100) n=16 | 100% (93-100) n=54 | 100% (95-100) n=75 | 100% (97-100) n=134 |
-| edit + memory tool | 100% (81-100) n=16 | 100% (93-100) n=54 | 100% (95-100) n=75 | 100% (97-100) n=134 |
+| none (full history) | 100% (81-100) n=16 | 100% (93-100) n=48 | 100% (97-100) n=106 | 100% (98-100) n=190 |
+| trim, keep 50% | 100% (81-100) n=16 | 100% (93-100) n=48 | 73% (63-80) n=106 | 24% (19-31) n=190 |
+| edit, keep 3 tool results | 100% (81-100) n=16 | 96% (86-99) n=48 | 94% (88-97) n=106 | 93% (88-96) n=190 |
+| summary | 100% (81-100) n=16 | 100% (93-100) n=48 | 100% (97-100) n=106 | 100% (98-100) n=190 |
+| trim + memory tool | 100% (81-100) n=16 | 100% (93-100) n=48 | 100% (97-100) n=106 | 100% (98-100) n=190 |
+| edit + memory tool | 100% (81-100) n=16 | 100% (93-100) n=48 | 100% (97-100) n=106 | 100% (98-100) n=190 |

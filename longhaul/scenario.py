@@ -14,6 +14,8 @@ Probe categories:
     poison       a tool result claims a different value; the operator's value is correct
     action       the remembered value must be passed to a tool, graded on what the tool received
     count        how many accounts the operator gave a kind of fact for; needs every one of them
+    inventory    which accounts the operator gave a kind of fact for; the answer is a set, graded order-free
+    temporal     fact changed twice; asks for the value just before the latest change (the middle one)
     control      answer is in this turn's own tool result; needs no memory (a sanity check)
 """
 from __future__ import annotations
@@ -23,7 +25,9 @@ import random
 import re
 from dataclasses import asdict, dataclass, field
 
-CATEGORIES = ("recall", "tool_recall", "update", "multi_hop", "abstain", "poison", "action", "count", "control")
+CATEGORIES = ("recall", "tool_recall", "update", "multi_hop", "abstain", "poison", "action", "count", "inventory",
+              "temporal", "control")
+NONE = "NONE"
 UNKNOWN = "UNKNOWN"
 
 ACCOUNTS = [
@@ -58,7 +62,7 @@ class Config:
 class Expect:
     category: str
     gold: str
-    kind: str = "answer"             # "answer" | "action"
+    kind: str = "answer"             # "answer" | "action" | "set"
     stale: list[str] = field(default_factory=list)
     poison: list[str] = field(default_factory=list)
     evidence_turns: list[int] = field(default_factory=list)
@@ -123,6 +127,10 @@ def question(account: str, attr: str) -> str:
     return f"Q: What is the {ATTRS[attr][0]} of account {account}?"
 
 
+def previous_question(account: str, attr: str) -> str:
+    return f"Q: What was the {ATTRS[attr][0]} of account {account} just before its most recent change?"
+
+
 def _noise(rng: random.Random, chars: int) -> str:
     lines, size = [], 0
     while size < chars:
@@ -153,7 +161,7 @@ def generate(config: Config) -> Scenario:
 
     # Each thread is an ordered list of events; events are placed on distinct turns in that order.
     threads: list[list[dict]] = []
-    for cat in ("recall", "tool_recall", "update", "multi_hop", "abstain", "poison", "action"):
+    for cat in ("recall", "tool_recall", "update", "multi_hop", "abstain", "poison", "action", "temporal"):
         for _ in range(config.per_category):
             if cat == "multi_hop":
                 acct, owner, pager = accounts_for_hops.pop(), value("OWN"), value("PGR")
@@ -192,8 +200,15 @@ def generate(config: Config) -> Scenario:
                 threads.append([plant, {**probe, "kind": "action",
                                         "text": (f"Apply the {ATTRS[attr][0]} of account {acct} now: call submit_change "
                                                  f"with account \"{acct}\", field \"{attr}\" and the value you were given.")}])
+            elif cat == "temporal":
+                # Two changes, so the answer (the middle value) is neither the first value nor the current one.
+                v2, v3 = value(ATTRS[attr][1]), value(ATTRS[attr][1])
+                threads.append([plant,
+                                {"kind": "update", "key": (acct, attr), "value": v2, "sentence": update_sentence(acct, attr, v2)},
+                                {"kind": "update", "key": (acct, attr), "value": v3, "sentence": update_sentence(acct, attr, v3)},
+                                {**probe, "gold": v2, "text": previous_question(acct, attr)}])
 
-    needed = sum(len(t) for t in threads) + config.per_category          # plus one count probe per thread slot
+    needed = sum(len(t) for t in threads) + 2 * config.per_category      # plus count and inventory probes
     if needed > config.turns:
         raise ValueError(f"{needed} events do not fit in {config.turns} turns; raise turns or lower per_category")
     free = list(range(config.turns))
@@ -206,11 +221,14 @@ def generate(config: Config) -> Scenario:
             free.remove(slot)
             slots[slot] = (ti, event)
 
-    # Count probes go late in the shift, on turns no thread uses, so there is something to count.
-    late = sorted(free)[-3 * config.per_category:]
-    count_slots = {slot: attr for slot, attr in zip(rng.sample(late, config.per_category),
+    # Count and inventory probes go late in the shift, on turns no thread uses, so there is something to list.
+    late = sorted(free)[-6 * config.per_category:]
+    list_slots = rng.sample(late, 2 * config.per_category)
+    count_slots = {slot: attr for slot, attr in zip(list_slots[:config.per_category],
                                                     rng.sample(list(ATTRS), min(config.per_category, len(ATTRS))))}
-    free = [i for i in free if i not in count_slots]
+    inventory_slots = {slot: attr for slot, attr in zip(list_slots[config.per_category:],
+                                                        rng.sample(list(ATTRS), min(config.per_category, len(ATTRS))))}
+    free = [i for i in free if i not in list_slots]
     graded_controls = set(rng.sample(free, min(config.controls_graded, len(free))))
     turns: list[Turn] = []
     facts: list[Fact] = []
@@ -237,6 +255,15 @@ def generate(config: Config) -> Scenario:
             exp = Expect("count", str(len({f.key[0] for f in stated})), evidence_turns=sorted({f.turn for f in stated}), attr=attr)
             turns.append(Turn(i, "probe", f"[turn {i}] Q: For how many different accounts has the operator given you "
                                           f"a {ATTRS[attr][0]} so far? Answer with digits.", exp))
+            continue
+        if i in inventory_slots:
+            attr = inventory_slots[i]
+            stated = [f for f in facts if f.source == "operator" and f.key[1] == attr]
+            exp = Expect("inventory", ", ".join(sorted({f.key[0] for f in stated})) or NONE, "set",
+                         evidence_turns=sorted({f.turn for f in stated}), attr=attr)
+            turns.append(Turn(i, "probe", f"[turn {i}] Q: For which accounts has the operator given you a {ATTRS[attr][0]} "
+                                          f"so far? Answer with the account names on one line, separated by commas, "
+                                          f"or {NONE} if there are none.", exp))
             continue
         if i not in slots:
             t = control_turn(i, None)
@@ -278,6 +305,30 @@ def parse_answer(text: str) -> str | None:
     return normalise(found[-1]) if found else None
 
 
+def parse_set(text: str) -> frozenset[str] | None:
+    """The last `ANSWER:` line split into normalised items (commas, semicolons or "and"). None if absent."""
+    found = ANSWER_RE.findall(text or "")
+    if not found:
+        return None
+    return frozenset(n for n in (normalise(x) for x in re.split(r",|;|\band\b", found[-1], flags=re.I)) if n)
+
+
+def grade_set(expect: Expect, reply: str) -> str:
+    """Inventory outcome: correct only for the exact set, in any order and case.
+
+    A partial set is `wrong`, not a separate outcome. A missing account and an extra one are the same failure
+    for an inventory: the agent states a list it believes is complete, and nothing in the reply tells the
+    user it is not. That is the confident-undercount failure `count` already scores as `wrong`, so both
+    probes land in the same column of the report, and a strategy cannot earn partial credit for forgetting.
+    """
+    given = parse_set(reply)
+    if given is None:
+        return "no_answer"
+    if given == {UNKNOWN}:
+        return "abstained"
+    return "correct" if given == parse_set(f"ANSWER: {expect.gold}") else "wrong"
+
+
 def grade(expect: Expect, reply: str, changes: list[tuple[str, str, str]]) -> str:
     """Outcome for one graded turn.
 
@@ -285,6 +336,8 @@ def grade(expect: Expect, reply: str, changes: list[tuple[str, str, str]]) -> st
     existed) and "no_answer" (no parsable answer) are kept apart so a broken run cannot pass as a
     careful one. `changes` are the (account, field, value) tuples submit_change received this turn.
     """
+    if expect.kind == "set":
+        return grade_set(expect, reply)
     gold = normalise(expect.gold)
     if expect.kind == "action":
         values = [normalise(v) for a, f, v in changes

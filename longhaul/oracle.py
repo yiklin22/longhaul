@@ -17,7 +17,7 @@ from typing import Callable
 
 from inspect_ai.model import ChatMessage, ChatMessageTool, ChatMessageUser, ModelOutput
 
-from .scenario import UNKNOWN, Scenario
+from .scenario import NONE, UNKNOWN, Scenario
 
 MODEL = "mockllm/model"
 TURN_RE = re.compile(r"\[turn (\d+)\]")
@@ -38,6 +38,18 @@ def resolve(scenario: Scenario, key: tuple[str, str], visible: str, trust_inject
         return max(operator, key=lambda f: f.turn).value
     directory = [f for f in seen if f.source == "directory"]
     return max(directory, key=lambda f: f.turn).value if directory else UNKNOWN
+
+
+def previous(scenario: Scenario, key: tuple[str, str], visible: str) -> str:
+    """The operator's second-to-last visible value for `key`: what a perfect reader calls the value before the latest change.
+
+    If the middle value was dropped but the first survived (Inspect's trim pins the first user message), this
+    returns the first value, which grades `wrong`: the reader answers confidently from what it can see, as it
+    does for a count that has lost part of its list.
+    """
+    seen = sorted((f for f in scenario.facts if f.key == key and f.source == "operator" and f.sentence in visible),
+                  key=lambda f: f.turn)
+    return seen[-2].value if len(seen) >= 2 else UNKNOWN
 
 
 WARNING = "Context compaction approaching"
@@ -114,14 +126,18 @@ def make_mock(kind: str, registry: dict[str, Scenario]) -> Callable[..., ModelOu
             return None
 
         question = turn.text.split("] ", 1)[1]
-        if turn.expect.category == "count":               # needs every operator statement of that kind
-            lookup = check_notes()                        # a count can be short without looking short
-            if lookup:
-                return lookup
+        lookup = check_notes()                            # a list can be short, and a value old, without looking it
+        if lookup:
+            return lookup
+        if turn.expect.category in ("count", "inventory"):  # needs every operator statement of that kind
             seen = {f.key[0] for f in scenario.facts if f.source == "operator" and f.key[1] == turn.expect.attr
                     and f.turn < turn.index and f.sentence in visible}
+            if turn.expect.category == "inventory":
+                return say(f"ANSWER: {', '.join(sorted(seen)) or NONE}")
             return say(f"ANSWER: {len(seen)}")
-        if question in scenario.hops:
+        if turn.expect.category == "temporal":
+            value = previous(scenario, (turn.expect.account, turn.expect.attr), visible)
+        elif question in scenario.hops:
             first, second = scenario.hops[question]
             middle = resolve(scenario, first, visible, gullible)
             value = UNKNOWN if middle == UNKNOWN else resolve(scenario, second, visible, gullible)
@@ -130,9 +146,6 @@ def make_mock(kind: str, registry: dict[str, Scenario]) -> Callable[..., ModelOu
         if turn.kind == "action" and used("submit_change", turn_at):
             return say("ANSWER: DONE")
         if value == UNKNOWN:
-            lookup = check_notes()
-            if lookup:
-                return lookup
             return say(f"ANSWER: {UNKNOWN}")
         if turn.kind == "action":
             return ModelOutput.for_tool_call(MODEL, "submit_change",
