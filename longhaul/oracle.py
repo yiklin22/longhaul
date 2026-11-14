@@ -41,7 +41,12 @@ def resolve(scenario: Scenario, key: tuple[str, str], visible: str, trust_inject
 
 
 def previous(scenario: Scenario, key: tuple[str, str], visible: str) -> str:
-    """The operator's second-to-last visible value for `key`: what a perfect reader calls the value before the latest change."""
+    """The operator's second-to-last visible value for `key`: what a perfect reader calls the value before the latest change.
+
+    If the middle value was dropped but the first survived (Inspect's trim pins the first user message), this
+    returns the first value, which grades `wrong`: the reader answers confidently from what it can see, as it
+    does for a count that has lost part of its list.
+    """
     seen = sorted((f for f in scenario.facts if f.key == key and f.source == "operator" and f.sentence in visible),
                   key=lambda f: f.turn)
     return seen[-2].value if len(seen) >= 2 else UNKNOWN

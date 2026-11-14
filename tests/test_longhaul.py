@@ -9,7 +9,7 @@ from types import SimpleNamespace
 
 from longhaul.cost import CARDS, Call, PrefixCache, dropped_thinking, price
 from longhaul.gate import compare
-from longhaul.oracle import make_mock
+from longhaul.oracle import make_mock, previous
 from longhaul.report import arm_stats, wilson
 from longhaul.scenario import CATEGORIES, NONE, UNKNOWN, Config, Expect, generate, grade, parse_answer
 from longhaul.task import REGISTRY, longhaul
@@ -85,6 +85,16 @@ class ScenarioTests(unittest.TestCase):
                 self.assertEqual(t.expect.gold, values[1].value)
                 self.assertEqual(t.expect.evidence_turns, [f.turn for f in values])
 
+    def test_previous_value_depends_on_which_values_are_visible(self):
+        s = generate(Config(seed=0))
+        t = next(t for t in s.graded() if t.expect.category == "temporal")
+        key = (t.expect.account, t.expect.attr)
+        v1, v2, v3 = [f for f in s.facts if f.key == key]
+        self.assertEqual(previous(s, key, "\n".join([v1.sentence, v2.sentence, v3.sentence])), v2.value)
+        self.assertEqual(previous(s, key, "\n".join([v2.sentence, v3.sentence])), v2.value)
+        self.assertEqual(previous(s, key, v3.sentence), UNKNOWN)
+        self.assertEqual(previous(s, key, "\n".join([v1.sentence, v3.sentence])), v1.value)   # middle lost: confidently wrong
+
     def test_new_probes_are_seeded(self):
         a, b = generate(Config(seed=7)), generate(Config(seed=7))
         pick = lambda s: [(t.index, t.expect.gold) for t in s.graded() if t.expect.category in ("inventory", "temporal")]
@@ -134,6 +144,7 @@ class GradingTests(unittest.TestCase):
         self.assertEqual(grade(inv, "Brightwell, Corvane, Halden", []), "no_answer")
         none = Expect("inventory", NONE, "set")
         self.assertEqual(grade(none, "ANSWER: none", []), "correct")
+        self.assertEqual(grade(none, "ANSWER: UNKNOWN", []), "abstained")
         self.assertEqual(grade(none, "ANSWER: Brightwell", []), "wrong")
 
     def test_temporal_answer_must_be_the_middle_value(self):
