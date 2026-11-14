@@ -11,7 +11,7 @@ from longhaul.cost import CARDS, Call, PrefixCache, dropped_thinking, price
 from longhaul.gate import compare
 from longhaul.oracle import make_mock
 from longhaul.report import arm_stats, wilson
-from longhaul.scenario import CATEGORIES, UNKNOWN, Config, Expect, generate, grade, parse_answer
+from longhaul.scenario import CATEGORIES, NONE, UNKNOWN, Config, Expect, generate, grade, parse_answer
 from longhaul.task import REGISTRY, longhaul
 
 
@@ -45,7 +45,7 @@ class ScenarioTests(unittest.TestCase):
     def test_gold_answer_never_appears_in_the_question(self):
         for seed in range(5):
             for t in generate(Config(seed=seed)).graded():
-                if t.expect.gold != UNKNOWN and t.expect.category not in ("control", "count"):
+                if t.expect.gold != UNKNOWN and t.expect.category not in ("control", "count", "inventory"):
                     self.assertNotIn(t.expect.gold, t.text)
 
     def test_abstain_pairs_are_never_stated_anywhere(self):
@@ -62,6 +62,34 @@ class ScenarioTests(unittest.TestCase):
         for t in counts:
             stated = {f.key[0] for f in s.facts if f.source == "operator" and f.key[1] == t.expect.attr and f.turn < t.index}
             self.assertEqual(t.expect.gold, str(len(stated)))
+
+    def test_inventory_probe_gold_is_the_set_of_accounts_the_operator_named_before_it(self):
+        s = generate(Config(seed=5, turns=80, per_category=3))
+        lists = [t for t in s.graded() if t.expect.category == "inventory"]
+        self.assertEqual(len(lists), 3)
+        for t in lists:
+            stated = {f.key[0] for f in s.facts if f.source == "operator" and f.key[1] == t.expect.attr and f.turn < t.index}
+            self.assertEqual(t.expect.gold, ", ".join(sorted(stated)) or NONE)
+            self.assertEqual(t.expect.kind, "set")
+
+    def test_temporal_gold_is_the_middle_of_three_operator_values(self):
+        for seed in range(5):
+            s = generate(Config(seed=seed))
+            probes = [t for t in s.graded() if t.expect.category == "temporal"]
+            self.assertEqual(len(probes), 2)
+            for t in probes:
+                values = [f for f in s.facts if f.key == (t.expect.account, t.expect.attr)]
+                self.assertEqual([f.source for f in values], ["operator"] * 3)
+                self.assertEqual(sorted(f.turn for f in values), [f.turn for f in values])
+                self.assertTrue(all(f.turn < t.index for f in values))
+                self.assertEqual(t.expect.gold, values[1].value)
+                self.assertEqual(t.expect.evidence_turns, [f.turn for f in values])
+
+    def test_new_probes_are_seeded(self):
+        a, b = generate(Config(seed=7)), generate(Config(seed=7))
+        pick = lambda s: [(t.index, t.expect.gold) for t in s.graded() if t.expect.category in ("inventory", "temporal")]
+        self.assertEqual(pick(a), pick(b))
+        self.assertEqual(len(pick(a)), 4)
 
     def test_too_many_events_for_the_turns_is_an_error(self):
         with self.assertRaises(ValueError):
@@ -94,6 +122,25 @@ class GradingTests(unittest.TestCase):
         self.assertEqual(grade(act, "ANSWER: DONE", [("Brightwell", "escalation_code", "ESC-0001")]), "wrong")
         self.assertEqual(grade(act, "ANSWER: DONE", []), "no_answer")           # claimed done, did nothing
         self.assertEqual(grade(act, "ANSWER: UNKNOWN", []), "abstained")
+
+
+    def test_inventory_is_graded_as_a_set(self):
+        inv = Expect("inventory", "Corvane, Halden, Brightwell", "set", attr="escalation_code")
+        self.assertEqual(grade(inv, "ANSWER: halden, Brightwell and corvane.", []), "correct")
+        self.assertEqual(grade(inv, "ANSWER: Brightwell; Corvane; Halden; Halden", []), "correct")
+        self.assertEqual(grade(inv, "ANSWER: Brightwell, Corvane", []), "wrong")                   # one missing
+        self.assertEqual(grade(inv, "ANSWER: Brightwell, Corvane, Halden, Pellam", []), "wrong")   # one extra
+        self.assertEqual(grade(inv, "ANSWER: UNKNOWN", []), "abstained")
+        self.assertEqual(grade(inv, "Brightwell, Corvane, Halden", []), "no_answer")
+        none = Expect("inventory", NONE, "set")
+        self.assertEqual(grade(none, "ANSWER: none", []), "correct")
+        self.assertEqual(grade(none, "ANSWER: Brightwell", []), "wrong")
+
+    def test_temporal_answer_must_be_the_middle_value(self):
+        tmp = Expect("temporal", "ESC-2222", account="Brightwell", attr="escalation_code")
+        self.assertEqual(grade(tmp, "ANSWER: ESC-2222", []), "correct")
+        self.assertEqual(grade(tmp, "ANSWER: ESC-3333", []), "wrong")                             # the current value
+        self.assertEqual(grade(tmp, "ANSWER: ESC-1111", []), "wrong")                             # the first value
 
 
 class CacheTests(unittest.TestCase):
@@ -196,9 +243,19 @@ class HarnessTests(unittest.TestCase):
         self.assertLess(rate(trimmed, "count"), 1.0)
         self.assertGreater(trimmed["outcomes"].get("wrong", 0), 0)
 
+    def test_trimming_fails_inventory_and_temporal_probes_at_long_distance(self):
+        trimmed = run("trim", "oracle", turns=80, seeds=4, per_category=3, threshold=6000)
+        for cat in ("inventory", "temporal"):
+            rows = [r for r in trimmed["rows"] if r["category"] == cat]
+            far = [r for r in rows if r["distance"] is not None and r["distance"] > 30]
+            self.assertTrue(far, cat)
+            self.assertLess(sum(r["outcome"] == "correct" for r in far), len(far), cat)
+            self.assertLess(rate(trimmed, cat), 1.0, cat)
+
     def test_edit_compaction_loses_only_tool_result_facts(self):
         arm = run("edit", "oracle")
-        self.assertEqual(rate(arm, "recall"), 1.0)
+        for cat in ("recall", "inventory", "temporal"):
+            self.assertEqual(rate(arm, cat), 1.0, cat)
         self.assertLess(rate(arm, "tool_recall"), 1.0)
 
     def test_summary_that_copies_every_fact_loses_nothing(self):
