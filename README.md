@@ -12,7 +12,7 @@ It is built on [Inspect AI](https://github.com/UKGovernmentBEIS/inspect_ai), the
 |---|---|
 | Workload, grading, Inspect task, cost model, report, regression gate | Built, 39 tests passing offline, CI green |
 | Offline results (below) | Real and reproducible: `python -m longhaul.sim` |
-| Live model results | **Not run yet.** No API key was available. Commands are below; nothing in this README is a live-model number |
+| Live model results | **Haiku 5.5 only**: one pilot, 3 shifts of 60 turns, 48 memory probes per strategy. Only the "Live pilot" section below holds live numbers. Opus, Sonnet, native compaction and LongMemEval have not run live |
 
 ## Offline results
 
@@ -36,7 +36,7 @@ What the offline numbers already show:
 3. **Trimming forgets by distance.** Survival is 98% or better for evidence up to 30 turns back and 13% beyond 60 turns.
 4. **Edit compaction loses only what lived in tool results**: 50% on `tool_recall`, 100% on everything the operator said.
 5. **Trimming makes an agent wrong, not just forgetful.** On "how many" questions it was right 5% of the time, and the 38 failures were confident undercounts, not `UNKNOWN`: the agent cannot tell that part of the list is gone. Inspect's trim also pins the first user message, so in one probe the original value survived there while its later correction was trimmed.
-6. **A memory tool is not free.** Giving the agent Inspect's `memory()` tool, with the save-your-notes warning before each compaction, raises trim's cost from $1.35 to $1.82, about the price of sending full history ($1.84). Whether the notes recover what trimming drops is a live question; the mock note-taker saves everything, so its score is not a finding.
+6. **A memory tool is not free.** Giving the agent Inspect's `memory()` tool, with the save-your-notes warning before each compaction, raises trim's cost from $1.35 to $1.82, about the price of sending full history ($1.84). The mock note-taker saves everything, so its score is not a finding; the live pilot below measures it on Haiku 5.5.
 
 ### Pauses between turns change the answer
 
@@ -56,6 +56,27 @@ Same runs, re-priced as the operator's pause between turns grows ($ per shift, O
 7. **A pause just over five minutes costs 13 times more on a plain 5-minute cache** ($1.84 to $24.33), because every turn rewrites the whole prompt. Inspect's switch to one-hour entries holds it to $2.06.
 8. **Past an hour, caching full history costs more than not caching at all** ($38.60 against $28.56): every turn pays the one-hour write price, twice the input rate, and never reads it back. This is where summarising becomes the cheapest option.
 9. **A lower compaction threshold buys little for edit and costs trim a lot.** From 60,000 to 15,000 tokens, edit drops from 97% to 89% survival and trim from 71% to 30%.
+
+## Live pilot (Haiku 5.5)
+
+`claude-haiku-5-5`, 3 shifts of 60 turns per strategy, compaction threshold 30,000 tokens, 48 memory probes and 18 control probes per strategy. Full report: [docs/results/live-haiku.md](docs/results/live-haiku.md).
+
+| strategy | memory accuracy, n=48 (95% CI) | control, n=18 | measured cache-read share | $ / shift on Haiku 5.5, modelled | same, measured | thinking blocks dropped |
+|---|---|---|---|---|---|---|
+| none (full history) | 100% (93-100) | 100% (82-100) | 98% | 0.024 | 0.032 | 0 |
+| trim | 69% (55-80) | 100% (82-100) | 96% | 0.020 | 0.026 | 381 |
+| edit | 98% (89-100) | 100% (82-100) | 97% | 0.018 | 0.023 | 0 |
+| summary | 98% (89-100) | 100% (82-100) | 94% | 0.021 | 0.027 | 13 |
+| trim + memory tool | 98% (89-100) | 94% (74-99) | 95% | 0.042 | 0.049 | 918 |
+| edit + memory tool | 98% (89-100) | 100% (82-100) | 95% | 0.037 | 0.044 | 38 |
+
+With 48 probes per strategy, a difference under about 14 points is noise. "Measured" prices the provider's own usage numbers (uncached input, cache writes, cache reads, output) at Haiku 5.5 rates; costs are means over 3 shifts, so they carry a min-max range, not an interval. `python -m longhaul.report` prints measured cost at the Opus 5.5 card only, so the Haiku column comes from `python -m longhaul.cost <log dir> --model claude-haiku-5-5`, divided by 3 shifts. The whole pilot came to $0.60 by that measure, against the $0.43 input-side floor from `longhaul.plan`.
+
+1. **Trim is the only strategy that clearly lost memory.** It scored 69% (33 of 48, CI 55-80). Every other strategy scored 98% or 100% (CIs 89-100 and 93-100), and the intervals do not overlap. The 0 to 2 point gaps among those five are noise.
+2. **Trim forgot by distance, and Haiku mostly said so.** Trim answered 100% of probes whose evidence was 10 turns back or less (8 of 8, CI 68-100) and 32% at 31 to 60 turns back (6 of 19, CI 15-54). 12 of its 15 failures were `UNKNOWN`, 2 were wrong and 1 was stale. The offline mock instead gave confident wrong counts; live, trim's `count` score of 4 of 6 (CI 30-90) against 6 of 6 for full history (CI 61-100) is noise.
+3. **The memory tool recovered what trim dropped, at about twice the price.** Trim with the memory tool scored 98% (47 of 48, CI 89-100), against 69% for trim alone. It cost $0.049 a shift measured (range over 3 shifts 0.047-0.054), against $0.026 for trim (0.025-0.027) and $0.032 for full history (0.031-0.032). Its one control miss (17 of 18, CI 74-99) is noise.
+4. **The cache model got the cache-read share right and the dollars low.** Modelled and measured cache-read shares agree within 1 point on every strategy (94% to 98%). Measured cost was 18% to 34% above modelled. Under-counted tokens explain the gap, not cache misses. The model estimates 2.4 characters a token. Measured prompt tokens were 1.25 to 1.29 times the estimate without the memory tool, and 1.03 to 1.05 times with it. Measured output tokens were 1.87 to 2.43 times the estimate. Why the memory arms come out closer on prompt tokens is not known yet.
+5. **Trimming dropped by far the most thinking blocks.** Over 3 shifts, trim dropped 381, trim with memory 918, edit with memory 38 and summary 13. Edit alone and full history dropped none. Edit, summary and both memory arms still scored 98% (CI 89-100). This run cannot separate the effect of the drops from the effect of trimming itself.
 
 ## How it works
 
@@ -120,10 +141,11 @@ The chat history is replayed as real conversation turns, session by session, wit
 
 ## Limits
 
-- No live-model result exists yet, on the synthetic shift or on LongMemEval. How well a real model reads a 72K-token prompt, and how much a real summariser keeps, are the open questions this was built to answer.
-- The cache model's breakpoints and lifetime follow Inspect's Anthropic provider as read from its source (v0.3.289). It has not been checked against live usage numbers.
+- The only live result is one small pilot on Haiku 5.5: 3 shifts of 60 turns, 48 memory probes per strategy. Opus 5.5 and Sonnet 5.5 have not run live, nor has native compaction (`strategy=native`), nor LongMemEval on real data. How well a stronger model reads a 72K-token prompt, at 120 turns, is still open.
+- The cache model's breakpoints and lifetime follow Inspect's Anthropic provider as read from its source (v0.3.289). On the Haiku pilot its cache-read share matched measured usage within 1 point, but measured cost was 18% to 34% above its estimate because it under-counts tokens. It has not been checked on Opus or Sonnet, or with pauses longer than five minutes.
+- `python -m longhaul.report` prices measured usage at the Opus 5.5 card only, not at the model that produced the log.
 - The workload is synthetic and fact-shaped. It tests counting, but not inventory ("what have we worked on") or temporal ordering.
-- Current Claude models bind thinking blocks to the conversation that produced them. Inspect's Anthropic provider (v0.3.289) asks the API to drop a block whose history was edited instead of rejecting the request, and logs each drop. So trim, edit and summary should run on Claude 5.x through the first-party API, but lose reasoning each time they edit. The report counts those drops per strategy on a live run; none has been measured yet.
+- Current Claude models bind thinking blocks to the conversation that produced them. Inspect's Anthropic provider (v0.3.289) asks the API to drop a block whose history was edited instead of rejecting the request, and logs each drop. So trim, edit and summary should run on Claude 5.x through the first-party API, but lose reasoning each time they edit. On the Haiku pilot they ran without errors and dropped 0 to 381 blocks per strategy over 3 shifts (918 for trim with the memory tool); whether the drops cost accuracy on a harder task is not measured.
 
 ## Related work
 
@@ -135,8 +157,8 @@ What is different here: the strategies are Inspect's shipped implementations, an
 
 ## Roadmap
 
-1. Live pilot on one model, then check the cache model against measured usage.
-2. Run the memory-tool arms and native compaction live (both are wired; neither has met a real model).
+1. Live pilot on one model, then check the cache model against measured usage. Partly done: Haiku 5.5 pilot run and cache-read share checked. Still to do: Opus 5.5 and Sonnet 5.5, and correcting the token estimate.
+2. Run the memory-tool arms and native compaction live. Memory arms done on Haiku 5.5; native compaction has not met a real model.
 3. Run the LongMemEval adapter on the real data, check the judge against a hand-labelled sample, then offer it upstream to `inspect_evals`.
 4. Inventory and temporal probes.
 5. Extend the regression gate to live runs, with tolerances set from run-to-run variance.
